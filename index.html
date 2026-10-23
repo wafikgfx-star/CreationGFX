@@ -1,0 +1,2000 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>نظام ERP للدعاية والإعلان والطباعة الرقمية | CreationGFX Live Cloud ERP</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    * { font-family: 'Cairo', sans-serif; }
+    .landscape-logo-box {
+      max-width: 240px;
+      height: 58px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .landscape-logo-box img {
+      max-height: 54px;
+      max-width: 230px;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+    }
+    @media print {
+      .no-print { display: none !important; }
+      body { background: #fff !important; }
+      .print-sheet { box-shadow: none !important; border: none !important; margin: 0 !important; padding: 0 !important; width: 100% !important; }
+    }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-900 min-h-screen flex flex-col md:flex-row">
+
+  <!-- SIDEBAR -->
+  <aside class="w-full md:w-72 bg-slate-900 text-white flex flex-col justify-between shrink-0 no-print">
+    <div>
+      <!-- Company Horizontal Landscape Branding -->
+      <div class="p-4 border-b border-slate-800 bg-slate-950">
+        <div class="landscape-logo-box bg-white/5 rounded-lg px-3 py-1 mx-auto mb-2 border border-slate-800" id="sidebarLogoContainer">
+          <span id="sidebarCompanyText" class="text-sm font-bold text-blue-300 text-center">كرييشن للدعاية والإعلان</span>
+        </div>
+        <div class="flex justify-center gap-2">
+          <label class="text-center text-xs text-slate-400 hover:text-white cursor-pointer bg-slate-800 px-2.5 py-1 rounded">
+            <span>📷 تغيير الشعار</span>
+            <input type="file" id="logoInput" accept="image/png,image/jpeg,image/svg+xml" class="hidden" />
+          </label>
+          <button onclick="switchView('settings')" class="text-xs text-emerald-300 hover:text-white bg-slate-800 px-2.5 py-1 rounded">
+            ☁️ المزامنة الحية
+          </button>
+        </div>
+      </div>
+
+      <!-- Navigation -->
+      <nav class="p-3 space-y-1 text-sm" id="navMenu">
+        <button onclick="switchView('calculator')" data-view="calculator" class="nav-btn w-full text-start px-4 py-2.5 rounded-lg font-semibold bg-blue-700 text-white">
+          📐 <span>حاسبة الطباعة (سم) وعروض الأسعار</span>
+        </button>
+        <button onclick="switchView('materials')" data-view="materials" class="nav-btn w-full text-start px-4 py-2.5 rounded-lg font-semibold text-slate-300 hover:bg-slate-800">
+          🎞️ <span>تبويب الخامات والـ 4 فئات سعرية</span>
+        </button>
+        <button onclick="switchView('customers')" data-view="customers" class="nav-btn w-full text-start px-4 py-2.5 rounded-lg font-semibold text-slate-300 hover:bg-slate-800">
+          👥 <span>إدارة العملاء وفئاتهم السعرية</span>
+        </button>
+        <button onclick="switchView('jobs')" data-view="jobs" class="nav-btn w-full text-start px-4 py-2.5 rounded-lg font-semibold text-slate-300 hover:bg-slate-800">
+          ⚙️ <span>أوامر الشغل والتكاليف (تعديل/إدارة)</span>
+        </button>
+        <button onclick="switchView('invoices')" data-view="invoices" class="nav-btn w-full text-start px-4 py-2.5 rounded-lg font-semibold text-slate-300 hover:bg-slate-800">
+          🧾 <span>الفواتير والخصم والطباعة (تعديل/تحصيل)</span>
+        </button>
+        <button onclick="switchView('dashboard')" data-view="dashboard" class="nav-btn w-full text-start px-4 py-2.5 rounded-lg font-semibold text-slate-300 hover:bg-slate-800">
+          📊 <span>لوحة التحكم والإحصائيات</span>
+        </button>
+        <button onclick="switchView('settings')" data-view="settings" class="nav-btn w-full text-start px-4 py-2.5 rounded-lg font-semibold text-amber-300 hover:bg-slate-800">
+          ☁️ <span>السحابة الحية (Firebase) وضبط الشركة</span>
+        </button>
+      </nav>
+    </div>
+
+    <div class="p-4 border-t border-slate-800 text-xs text-slate-400 space-y-2">
+      <div class="flex items-center justify-between">
+        <span>الصلاحية الحالية:</span>
+        <select id="roleSelector" onchange="changeRole(this.value)" class="bg-slate-800 text-white rounded px-2 py-1 border border-slate-700">
+          <option value="ADMIN">مدير النظام (Admin)</option>
+          <option value="SALES">مبيعات (بدون حذف فواتير)</option>
+        </select>
+      </div>
+      <button onclick="exportBackupJson()" class="w-full py-1.5 rounded bg-slate-800 hover:bg-blue-900/60 text-blue-200 font-semibold">
+        💾 تحميل نسخة احتياطية (JSON)
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN AREA -->
+  <div class="flex-1 flex flex-col min-w-0">
+    <!-- Top Header (Single System Title - No Duplicate Company Name) -->
+    <header class="bg-white border-b border-slate-200 px-6 py-3.5 flex flex-wrap items-center justify-between gap-3 no-print">
+      <div>
+        <h1 class="text-lg font-extrabold text-slate-800">نظام إدارة شركات الدعاية والإعلان والطباعة الرقمية (ERP)</h1>
+        <p class="text-xs text-slate-500">مزامنة سحابية حية Firebase • ربط العميل بفئته السعرية تلقائياً • الفاتورة بدون إظهار الفئة السعرية</p>
+      </div>
+      <div class="flex items-center gap-2">
+        <span id="cloudStatusBadge" onclick="switchView('settings')" class="cursor-pointer px-3 py-1.5 rounded-full text-xs font-bold bg-slate-100 text-slate-700 border">
+          ⚪ جاري الاتصال بالسحابة...
+        </span>
+        <button onclick="toggleLanguage()" id="langBtn" class="px-4 py-2 rounded-lg bg-blue-900 text-white text-xs font-bold hover:bg-blue-800 transition">
+          English (LTR)
+        </button>
+      </div>
+    </header>
+
+    <!-- CONTENT VIEWS -->
+    <main class="p-6 space-y-6 max-w-7xl w-full mx-auto">
+
+      <!-- ===================================================================== -->
+      <!-- VIEW 1: PRINTING & WASTE CALCULATOR (DEFAULT CM + MANUAL DISCOUNT)     -->
+      <!-- ===================================================================== -->
+      <section id="view-calculator" class="space-y-6">
+        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-4 pb-3 border-b">
+            <div>
+              <h2 class="text-lg font-extrabold text-blue-950">حاسبة الطباعة الرقمية والهالك (وحدة القياس الافتراضية: سنتيمتر cm)</h2>
+              <p class="text-xs text-slate-500">اختر العميل ليتم اختيار فئته السعرية تلقائياً، ولن تظهر الفئة السعرية في فاتورة العميل المطبوعة</p>
+            </div>
+            <span class="px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800">
+              هالك نظري تقديري (لحين تسجيل الإنتاج الفعلي)
+            </span>
+          </div>
+
+          <!-- Customer, Material & 4 Pricing Category Selector Bar -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 bg-blue-50 p-4 rounded-xl border border-blue-200 mb-5">
+            <div>
+              <label class="block text-xs font-extrabold text-blue-950 mb-1">1. اختر العميل (يضبط فئته السعرية تلقائياً)</label>
+              <select id="qCustomer" onchange="onCalculatorCustomerChange()" class="w-full border-2 border-indigo-700 rounded-lg px-3 py-2 text-sm font-bold bg-white"></select>
+            </div>
+            <div>
+              <label class="block text-xs font-extrabold text-blue-950 mb-1">2. اختر الخامة (يضبط عرض الرول والهالك تلقائياً)</label>
+              <select id="calcMaterialSelect" onchange="onCalculatorMaterialOrTierChange()" class="w-full border-2 border-blue-700 rounded-lg px-3 py-2 text-sm font-bold bg-white"></select>
+            </div>
+            <div>
+              <label class="block text-xs font-extrabold text-blue-950 mb-1">3. الفئة السعرية للحساب (سرية لا تظهر بالفاتورة)</label>
+              <select id="calcTierSelect" onchange="onCalculatorMaterialOrTierChange()" class="w-full border-2 border-emerald-700 rounded-lg px-3 py-2 text-sm font-bold bg-white"></select>
+            </div>
+          </div>
+
+          <!-- Calculator Inputs (CM Default) -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
+            <div>
+              <label class="block text-xs font-bold text-blue-900 mb-1">وحدة إدخال المقاس (الافتراضي: سنتيمتر)</label>
+              <select id="calcUnit" onchange="onUnitSelectChange()" class="w-full border-2 border-blue-600 rounded-lg px-3 py-2 text-sm font-bold bg-blue-50/40">
+                <option value="CM" selected>سنتيمتر (Centimeters - cm)</option>
+                <option value="M">متر (Meters - m)</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-600 mb-1">عرض الرول المتاح بالمتر (Roll Width m)</label>
+              <input type="number" id="calcRollWidth" value="3.20" step="0.01" oninput="runLivePrintCalc()" class="w-full border rounded-lg px-3 py-2 text-sm font-bold bg-slate-50" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1" id="lblPrintLengthInput">طول الطباعة بالسنتيمتر (cm)</label>
+              <input type="number" id="calcLength" value="500" step="1" oninput="runLivePrintCalc()" class="w-full border rounded-lg px-3 py-2 text-sm font-bold" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1" id="lblPrintWidthInput">عرض الطباعة بالسنتيمتر (cm)</label>
+              <input type="number" id="calcWidth" value="200" step="1" oninput="runLivePrintCalc()" class="w-full border rounded-lg px-3 py-2 text-sm font-bold" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-600 mb-1">الكمية / العدد (Quantity)</label>
+              <input type="number" id="calcQty" value="1" step="1" min="1" oninput="runLivePrintCalc()" class="w-full border rounded-lg px-3 py-2 text-sm" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-600 mb-1" id="calcRateLabel">سعر متر الطباعة للفئة (ج.م/م²)</label>
+              <input type="number" id="calcRate" value="110" step="1" oninput="runLivePrintCalc()" class="w-full border rounded-lg px-3 py-2 text-sm font-bold text-blue-900" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-600 mb-1">سعر متر الهالك (ج.م/م²)</label>
+              <input type="number" id="calcWasteRate" value="60" step="1" oninput="runLivePrintCalc()" class="w-full border rounded-lg px-3 py-2 text-sm font-bold text-amber-800" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-600 mb-1">تعديل يدوي لمساحة الهالك (م² اختياري)</label>
+              <input type="number" id="calcManualWaste" placeholder="تلقائي (Auto)" step="0.1" oninput="runLivePrintCalc()" class="w-full border rounded-lg px-3 py-2 text-sm" />
+            </div>
+          </div>
+
+          <!-- Validation Alert -->
+          <div id="calcErrorBox" class="hidden p-4 mb-4 rounded-lg bg-red-50 border border-red-300 text-red-800 text-sm font-bold"></div>
+
+          <!-- 9 Mandatory Output Fields -->
+          <div id="calcOutputGrid" class="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-slate-50 p-4 rounded-xl border border-slate-200 mb-6">
+            <div class="p-3 bg-white rounded-lg border">
+              <div class="text-xs text-slate-500">1. مساحة الطباعة الأساسية (Base Area)</div>
+              <div class="text-base font-extrabold" id="outBaseAreaVal">0.00 m²</div>
+            </div>
+            <div class="p-3 bg-white rounded-lg border">
+              <div class="text-xs text-slate-500">2. سعر الطباعة الأساسي (Base Price)</div>
+              <div class="text-base font-extrabold text-blue-900" id="outBasePriceVal">0.00 ج.م</div>
+            </div>
+            <div class="p-3 bg-white rounded-lg border">
+              <div class="text-xs text-slate-500">3. عرض الرول (Roll Width)</div>
+              <div class="text-base font-extrabold" id="outRollWVal">0.00 m</div>
+            </div>
+            <div class="p-3 bg-white rounded-lg border">
+              <div class="text-xs text-slate-500">4. عرض الطباعة بالمتر والسنتيمتر</div>
+              <div class="text-base font-extrabold" id="outPrintWVal">0.00 m</div>
+            </div>
+            <div class="p-3 bg-white rounded-lg border">
+              <div class="text-xs text-slate-500">5. العرض المتبقي للهالك (Remaining Width)</div>
+              <div class="text-base font-extrabold text-amber-700" id="outRemWVal">0.00 m</div>
+            </div>
+            <div class="p-3 bg-white rounded-lg border">
+              <div class="text-xs text-slate-500">6. مساحة الهالك (Waste Area)</div>
+              <div class="text-base font-extrabold text-amber-700" id="outWasteAreaVal">0.00 m²</div>
+            </div>
+            <div class="p-3 bg-white rounded-lg border">
+              <div class="text-xs text-slate-500">7. سعر وحدة الهالك (Waste Unit Price)</div>
+              <div class="text-base font-extrabold" id="outWasteUnitVal">0.00 ج.م</div>
+            </div>
+            <div class="p-3 bg-white rounded-lg border">
+              <div class="text-xs text-slate-500">8. إجمالي تكلفة الهالك (Total Waste Cost)</div>
+              <div class="text-base font-extrabold text-amber-800" id="outWasteCostVal">0.00 ج.م</div>
+            </div>
+            <div class="p-3 bg-blue-950 text-white rounded-lg border border-blue-900">
+              <div class="text-xs text-blue-200">9. السعر النهائي للطباعة شاملاً الهالك</div>
+              <div class="text-lg font-extrabold" id="outFinalPrintVal">0.00 ج.م</div>
+            </div>
+          </div>
+
+          <!-- Complete Quotation Builder (Manual Fixed Discount Amount in EGP) -->
+          <div class="border-t pt-5">
+            <h3 class="font-bold text-slate-800 mb-3">الخدمات الإضافية والخصم اليدوي وإصدار الفاتورة</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 mb-4">
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">منتج قياسي إضافي (ج.م)</label>
+                <input type="number" id="qStdTotal" value="0" oninput="runLivePrintCalc()" class="w-full border rounded-lg px-2.5 py-2 text-sm" />
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">خدمة تصميم (ج.م)</label>
+                <input type="number" id="qDesign" value="500" oninput="runLivePrintCalc()" class="w-full border rounded-lg px-2.5 py-2 text-sm" />
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">خدمة تركيب وشاسيه (ج.م)</label>
+                <input type="number" id="qInstall" value="800" oninput="runLivePrintCalc()" class="w-full border rounded-lg px-2.5 py-2 text-sm" />
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">رسوم إضافية / Over Price (ج.م)</label>
+                <input type="number" id="qOverPrice" value="0" oninput="runLivePrintCalc()" class="w-full border rounded-lg px-2.5 py-2 text-sm" />
+              </div>
+              <div>
+                <label class="block text-xs font-extrabold text-rose-700 mb-1">قيمة الخصم اليدوي (ج.م)</label>
+                <input type="number" id="qDiscountFixed" value="0" min="0" step="10" oninput="runLivePrintCalc()" class="w-full border-2 border-rose-500 rounded-lg px-2.5 py-2 text-sm font-extrabold text-rose-800 bg-rose-50/30" placeholder="مبلغ الخصم ج.م" />
+              </div>
+            </div>
+
+            <div class="flex flex-wrap items-center justify-between gap-4 bg-slate-900 text-white p-4 rounded-xl">
+              <div class="space-y-0.5 text-sm">
+                <div><span>الإجمالي قبل الخصم:</span> <strong id="qPreDiscountVal">0.00 ج.م</strong></div>
+                <div><span>قيمة الخصم اليدوي:</span> <strong id="qDiscountAmtVal" class="text-amber-300">0.00 ج.م</strong></div>
+                <div class="text-lg"><span>الصافي النهائي بعد الخصم:</span> <strong id="qGrandTotalVal" class="text-emerald-400">0.00 ج.م</strong></div>
+              </div>
+              <button onclick="createQuotationJobAndInvoice()" class="px-5 py-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 font-bold text-sm shadow">
+                🚀 اعتماد العرض + إنشاء أمر شغل + إصدار فاتورة (ومزامنة سحابية)
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================================================================== -->
+      <!-- VIEW 2: MATERIALS & CUSTOMIZABLE 4 PRICING CATEGORIES                 -->
+      <!-- ===================================================================== -->
+      <section id="view-materials" class="hidden space-y-6">
+        <div class="bg-gradient-to-l from-slate-900 to-blue-950 text-white p-5 rounded-xl shadow-sm border border-blue-800">
+          <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
+            <div>
+              <h2 class="text-base font-extrabold text-white">🏷️ تخصيص مسميات الفئات السعرية الأربع في النظام</h2>
+              <p class="text-xs text-blue-200">عدّل أسماء الفئات السعرية هنا ليتم تحديثها في تسجيل العملاء وفي جدول الخامات والحاسبة</p>
+            </div>
+            <div class="flex flex-wrap gap-2">
+              <button onclick="applyTierPreset('commercial')" class="px-3 py-1.5 rounded-lg bg-blue-800 hover:bg-blue-700 text-xs font-bold border border-blue-600">
+                ⚡ قالب: أفراد / شركات / وكالات / جملة
+              </button>
+              <button onclick="applyTierPreset('quality')" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-bold border border-slate-600">
+                ⚡ قالب: قياسي / تجاري / ممتاز / مستعجل
+              </button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 items-end">
+            <div>
+              <label class="block text-xs text-blue-200 mb-1">اسم الفئة السعرية (1)</label>
+              <input type="text" id="customTierName1" oninput="saveTierNamesLive()" class="w-full rounded-lg px-3 py-2 text-sm font-extrabold text-slate-900 bg-white border-2 border-blue-400" />
+            </div>
+            <div>
+              <label class="block text-xs text-emerald-200 mb-1">اسم الفئة السعرية (2)</label>
+              <input type="text" id="customTierName2" oninput="saveTierNamesLive()" class="w-full rounded-lg px-3 py-2 text-sm font-extrabold text-slate-900 bg-white border-2 border-emerald-400" />
+            </div>
+            <div>
+              <label class="block text-xs text-purple-200 mb-1">اسم الفئة السعرية (3)</label>
+              <input type="text" id="customTierName3" oninput="saveTierNamesLive()" class="w-full rounded-lg px-3 py-2 text-sm font-extrabold text-slate-900 bg-white border-2 border-purple-400" />
+            </div>
+            <div>
+              <label class="block text-xs text-rose-200 mb-1">اسم الفئة السعرية (4)</label>
+              <input type="text" id="customTierName4" oninput="saveTierNamesLive()" class="w-full rounded-lg px-3 py-2 text-sm font-extrabold text-slate-900 bg-white border-2 border-rose-400" />
+            </div>
+            <div>
+              <button onclick="saveTierNamesLive(true)" class="w-full py-2 px-4 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm shadow">
+                💾 حفظ ومزامنة الفئات
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Material Add / Edit Card -->
+        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-4 pb-3 border-b">
+            <div>
+              <h2 class="text-lg font-extrabold text-blue-950" id="matFormTitle">إضافة خامة طباعة جديدة وتحديد عرض الرول وأسعار الفئات الـ 4</h2>
+              <p class="text-xs text-slate-500">حدد كود واسم الخامة وعرض الرول بالمتر وأسعار المتر المربع لكل فئة من الفئات الأربع</p>
+            </div>
+            <button onclick="resetMaterialForm()" id="cancelEditMatBtn" class="hidden px-3 py-1.5 rounded-lg bg-slate-200 text-slate-800 text-xs font-bold hover:bg-slate-300">
+              ✖ إلغاء التعديل
+            </button>
+          </div>
+
+          <input type="hidden" id="editMatIndex" value="-1" />
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-4">
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">كود الخامة (SKU)</label>
+              <input type="text" id="matSku" placeholder="مثال: BNR-320" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm" />
+            </div>
+            <div class="lg:col-span-2">
+              <label class="block text-xs font-bold text-slate-700 mb-1">اسم الخامة ونوعها</label>
+              <input type="text" id="matName" placeholder="مثال: بانر فرونت لايت 440 جرام كوري" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-blue-900 mb-1">عرض رول الخامة بالمتر (Roll Width)</label>
+              <div class="flex gap-1">
+                <input type="number" id="matRollWidth" step="0.01" min="0.1" value="3.20" class="w-full border-2 border-blue-600 rounded-lg px-3 py-2 text-sm font-bold" />
+                <select onchange="document.getElementById('matRollWidth').value = this.value" class="border rounded-lg px-2 text-xs bg-slate-50">
+                  <option value="3.20">3.20م</option>
+                  <option value="2.50">2.50م</option>
+                  <option value="2.20">2.20م</option>
+                  <option value="1.80">1.80م</option>
+                  <option value="1.60">1.60م</option>
+                  <option value="1.52">1.52م</option>
+                  <option value="1.27">1.27م</option>
+                  <option value="1.07">1.07م</option>
+                </select>
+              </div>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">الرصيد المتاح بالمخزن (م²)</label>
+              <input type="number" id="matStock" step="1" value="300" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm" />
+            </div>
+          </div>
+
+          <div class="bg-blue-50/60 p-4 rounded-xl border border-blue-200 mb-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3">
+              <div class="bg-white p-2.5 rounded-lg border border-blue-200">
+                <label class="block text-xs font-bold text-blue-900 mb-1" id="lblMatPrice1">1️⃣ فئة 1</label>
+                <input type="number" id="matPrice1" step="1" value="110" class="w-full border rounded px-2.5 py-1.5 text-sm font-extrabold text-blue-900" />
+              </div>
+              <div class="bg-white p-2.5 rounded-lg border border-emerald-200">
+                <label class="block text-xs font-bold text-emerald-800 mb-1" id="lblMatPrice2">2️⃣ فئة 2</label>
+                <input type="number" id="matPrice2" step="1" value="95" class="w-full border rounded px-2.5 py-1.5 text-sm font-extrabold text-emerald-800" />
+              </div>
+              <div class="bg-white p-2.5 rounded-lg border border-purple-200">
+                <label class="block text-xs font-bold text-purple-900 mb-1" id="lblMatPrice3">3️⃣ فئة 3</label>
+                <input type="number" id="matPrice3" step="1" value="85" class="w-full border rounded px-2.5 py-1.5 text-sm font-extrabold text-purple-900" />
+              </div>
+              <div class="bg-white p-2.5 rounded-lg border border-rose-200">
+                <label class="block text-xs font-bold text-rose-800 mb-1" id="lblMatPrice4">4️⃣ فئة 4</label>
+                <input type="number" id="matPrice4" step="1" value="75" class="w-full border rounded px-2.5 py-1.5 text-sm font-extrabold text-rose-800" />
+              </div>
+              <div class="bg-amber-50 p-2.5 rounded-lg border border-amber-300">
+                <label class="block text-xs font-bold text-amber-900 mb-1">⚠️ سعر متر الهالك (ج.م/م²)</label>
+                <input type="number" id="matWastePrice" step="1" value="60" class="w-full border rounded px-2.5 py-1.5 text-sm font-bold text-amber-900" />
+              </div>
+              <div class="bg-slate-100 p-2.5 rounded-lg border border-slate-300">
+                <label class="block text-xs font-bold text-slate-700 mb-1">🔒 تكلفة الشراء الداخلية (م²)</label>
+                <input type="number" id="matCost" step="1" value="45" class="w-full border rounded px-2.5 py-1.5 text-sm font-bold text-slate-700" />
+              </div>
+            </div>
+          </div>
+
+          <div class="flex justify-end">
+            <button onclick="saveMaterial()" id="saveMatBtn" class="px-6 py-2.5 rounded-lg bg-blue-900 hover:bg-blue-800 text-white font-bold text-sm shadow">
+              ➕ حفظ وإضافة الخامة إلى النظام
+            </button>
+          </div>
+        </div>
+
+        <!-- Materials List Table -->
+        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm overflow-x-auto">
+          <h3 class="font-extrabold text-slate-800 mb-4">جدول الخامات المسجلة وعروض الرولات والفئات السعرية الـ 4</h3>
+          <table class="w-full text-sm border-collapse">
+            <thead>
+              <tr class="bg-slate-900 text-white text-xs">
+                <th class="p-3 text-start">الكود</th>
+                <th class="p-3 text-start">اسم الخامة</th>
+                <th class="p-3 text-center bg-blue-950">عرض الرول</th>
+                <th class="p-3 text-center text-blue-200" id="thTier1">فئة 1</th>
+                <th class="p-3 text-center text-emerald-200" id="thTier2">فئة 2</th>
+                <th class="p-3 text-center text-purple-200" id="thTier3">فئة 3</th>
+                <th class="p-3 text-center text-rose-200" id="thTier4">فئة 4</th>
+                <th class="p-3 text-center">سعر الهالك/م²</th>
+                <th class="p-3 text-center">تكلفة الشراء/م²</th>
+                <th class="p-3 text-center">الرصيد (م²)</th>
+                <th class="p-3 text-center">إجراءات (تعديل / حذف)</th>
+              </tr>
+            </thead>
+            <tbody id="materialsTableBody" class="divide-y"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ===================================================================== -->
+      <!-- VIEW 3: JOB ORDERS (WITH FULL EDIT & DELETE CAPABILITY)                -->
+      <!-- ===================================================================== -->
+      <section id="view-jobs" class="hidden space-y-6">
+        <div id="jobEditCard" class="hidden bg-amber-50 p-6 rounded-xl border-2 border-amber-400 shadow-sm space-y-4">
+          <div class="flex items-center justify-between border-b border-amber-200 pb-3">
+            <h3 class="text-base font-extrabold text-amber-950" id="jobEditTitle">✏️ تعديل بيانات وتكاليف أمر الشغل</h3>
+            <button onclick="closeJobEdit()" class="px-3 py-1 rounded bg-white border text-xs font-bold">✖ إغلاق</button>
+          </div>
+          <input type="hidden" id="editJobIdx" value="-1" />
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
+            <div class="lg:col-span-2">
+              <label class="block text-xs font-bold text-slate-700 mb-1">وصف ومواصفات أمر الشغل</label>
+              <input type="text" id="editJobDesc" class="w-full border rounded-lg px-3 py-2 bg-white" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">العميل</label>
+              <select id="editJobCustomer" class="w-full border rounded-lg px-3 py-2 bg-white"></select>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">حالة الإنتاج</label>
+              <select id="editJobStatus" class="w-full border rounded-lg px-3 py-2 bg-white font-bold">
+                <option value="NEW">NEW (جديد)</option>
+                <option value="APPROVED">APPROVED (معتمد)</option>
+                <option value="IN_PRODUCTION">IN_PRODUCTION (قيد الطباعة)</option>
+                <option value="PRINTING_COMPLETED">PRINTING_COMPLETED (تمت الطباعة)</option>
+                <option value="INSTALLED">INSTALLED (تم التركيب)</option>
+                <option value="DELIVERED">DELIVERED (تم التسليم)</option>
+                <option value="CLOSED">CLOSED (مغلق)</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">صافي إيراد الشغلانة (ج.م)</label>
+              <input type="number" id="editJobRevenue" step="10" class="w-full border rounded-lg px-3 py-2 bg-white font-bold" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">تكلفة الخامة الفعلية (ج.م)</label>
+              <input type="number" id="editJobMatCost" step="10" class="w-full border rounded-lg px-3 py-2 bg-white" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">تكلفة الهالك الفعلية (ج.م)</label>
+              <input type="number" id="editJobWasteCost" step="10" class="w-full border rounded-lg px-3 py-2 bg-white" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">تكلفة العمالة والتركيب والتصميم (ج.م)</label>
+              <input type="number" id="editJobLaborCost" step="10" class="w-full border rounded-lg px-3 py-2 bg-white" />
+            </div>
+          </div>
+          <div class="flex justify-end gap-2">
+            <button onclick="saveJobEdit()" class="px-6 py-2 rounded-lg bg-amber-600 hover:bg-amber-500 text-white font-bold text-sm">
+              💾 حفظ تعديلات أمر الشغل
+            </button>
+          </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+          <h2 class="text-lg font-extrabold text-slate-800 mb-1">أوامر الشغل، التكلفة الفعلية، ومنع ازدواجية الهالك</h2>
+          <p class="text-xs text-slate-500 mb-4">أي تعديل هنا يتزامن تلقائياً مع باقي الأجهزة المتصلة بـ Firebase</p>
+          <div id="jobsContainer" class="space-y-4"></div>
+        </div>
+      </section>
+
+      <!-- ===================================================================== -->
+      <!-- VIEW 4: INVOICES, DISCOUNT DETAILS, EDIT INVOICE & A4 PRINT            -->
+      <!-- ===================================================================== -->
+      <section id="view-invoices" class="hidden space-y-6">
+        <div id="invoiceEditCard" class="hidden bg-amber-50 p-6 rounded-xl border-2 border-amber-400 shadow-sm space-y-4 no-print">
+          <div class="flex items-center justify-between border-b border-amber-200 pb-3">
+            <h3 class="text-base font-extrabold text-amber-950" id="invEditTitle">✏️ تعديل الفاتورة والخصم والمدفوعات</h3>
+            <button onclick="closeInvoiceEdit()" class="px-3 py-1 rounded bg-white border text-xs font-bold">✖ إغلاق</button>
+          </div>
+          <input type="hidden" id="editInvIdx" value="-1" />
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">العميل</label>
+              <select id="editInvCustomer" class="w-full border rounded-lg px-3 py-2 bg-white"></select>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">تاريخ الفاتورة</label>
+              <input type="date" id="editInvDate" class="w-full border rounded-lg px-3 py-2 bg-white" />
+            </div>
+            <div class="lg:col-span-2">
+              <label class="block text-xs font-bold text-slate-700 mb-1">البيان الرئيسي / وصف البنود في الفاتورة (بدون الفئة السعرية)</label>
+              <input type="text" id="editInvDesc" class="w-full border rounded-lg px-3 py-2 bg-white" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">الإجمالي الفرعي للبنود قبل الخصم (ج.م)</label>
+              <input type="number" id="editInvSubtotal" step="10" class="w-full border rounded-lg px-3 py-2 bg-white font-bold" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">رسوم إضافية / Over Price (ج.م)</label>
+              <input type="number" id="editInvOverPrice" step="10" class="w-full border rounded-lg px-3 py-2 bg-white" />
+            </div>
+            <div>
+              <label class="block text-xs font-extrabold text-rose-800 mb-1">قيمة الخصم اليدوي (ج.م)</label>
+              <input type="number" id="editInvDiscount" step="10" min="0" class="w-full border-2 border-rose-400 rounded-lg px-3 py-2 bg-white font-extrabold text-rose-800" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-emerald-800 mb-1">المبلغ المدفوع حتى الآن (ج.م)</label>
+              <input type="number" id="editInvPaid" step="10" min="0" class="w-full border rounded-lg px-3 py-2 bg-white font-bold text-emerald-800" />
+            </div>
+            <div class="lg:col-span-4">
+              <label class="block text-xs font-bold text-slate-700 mb-1">ملاحظات الفاتورة</label>
+              <input type="text" id="editInvNotes" placeholder="أي ملاحظات إضافية تظهر في الفاتورة..." class="w-full border rounded-lg px-3 py-2 bg-white" />
+            </div>
+          </div>
+          <div class="flex justify-end gap-2">
+            <button onclick="saveInvoiceEdit()" class="px-6 py-2 rounded-lg bg-amber-600 hover:bg-amber-500 text-white font-bold text-sm">
+              💾 حفظ تعديلات الفاتورة وإعادة حساب الصافي
+            </button>
+          </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm no-print">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+            <h2 class="text-lg font-extrabold text-slate-800">الفواتير، تفاصيل الخصم، التعديل، والتحصيل الجزئي</h2>
+            <button onclick="switchView('settings')" class="px-3 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-900 text-xs font-bold border border-blue-200">
+              🏢 تعديل بيانات الشركة والشعار في الفاتورة
+            </button>
+          </div>
+          <div id="invoicesContainer" class="space-y-4"></div>
+        </div>
+
+        <!-- Printable A4 Invoice Area -->
+        <div id="printableInvoiceArea" class="bg-white p-8 rounded-xl border border-slate-300 shadow-sm print-sheet"></div>
+      </section>
+
+      <!-- ===================================================================== -->
+      <!-- VIEW 5: CUSTOMERS (ADD, EDIT, DELETE + PRICING TIER ASSIGNMENT)       -->
+      <!-- ===================================================================== -->
+      <section id="view-customers" class="hidden space-y-6">
+        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+          <div class="flex items-center justify-between mb-4 pb-3 border-b">
+            <div>
+              <h3 class="text-lg font-extrabold text-slate-800" id="custFormTitle">👥 إدارة العملاء وتحديد الفئة السعرية لكل عميل</h3>
+              <p class="text-xs text-slate-500">حدد الفئة السعرية عند تسجيل العميل ليتم تطبيق أسعاره تلقائياً في الحاسبة دون إظهار الفئة في فاتورته</p>
+            </div>
+            <button onclick="resetCustomerForm()" id="cancelCustEditBtn" class="hidden px-3 py-1.5 rounded bg-slate-200 text-xs font-bold">
+              ✖ إلغاء التعديل
+            </button>
+          </div>
+
+          <input type="hidden" id="editCustIdx" value="-1" />
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 mb-4">
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">اسم العميل / الشركة</label>
+              <input id="newCustName" placeholder="مثال: شركة النور للمقاولات" class="w-full border rounded-lg px-3 py-2 text-sm" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">رقم الهاتف</label>
+              <input id="newCustPhone" placeholder="010xxxxxxxx" class="w-full border rounded-lg px-3 py-2 text-sm" />
+            </div>
+            <div>
+              <label class="block text-xs font-extrabold text-emerald-800 mb-1">الفئة السعرية للعميل</label>
+              <select id="newCustTier" class="w-full border-2 border-emerald-600 rounded-lg px-3 py-2 text-sm font-bold bg-emerald-50/40"></select>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">العنوان / ملاحظات</label>
+              <input id="newCustAddress" placeholder="القاهرة - مدينة نصر" class="w-full border rounded-lg px-3 py-2 text-sm" />
+            </div>
+            <div class="flex items-end">
+              <button onclick="saveCustomer()" id="saveCustBtn" class="w-full bg-blue-900 hover:bg-blue-800 text-white px-5 py-2 rounded-lg text-sm font-bold">
+                ➕ حفظ وإضافة العميل
+              </button>
+            </div>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm border-collapse">
+              <thead>
+                <tr class="bg-slate-900 text-white text-xs">
+                  <th class="p-3 text-start">كود العميل</th>
+                  <th class="p-3 text-start">اسم العميل / الشركة</th>
+                  <th class="p-3 text-center bg-emerald-950">الفئة السعرية المعتمدة</th>
+                  <th class="p-3 text-start">رقم الهاتف</th>
+                  <th class="p-3 text-start">العنوان / الملاحظات</th>
+                  <th class="p-3 text-center">إجراءات (تعديل / حذف)</th>
+                </tr>
+              </thead>
+              <tbody id="customersTableBody" class="divide-y"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================================================================== -->
+      <!-- VIEW 6: FIREBASE LIVE CLOUD SYNC & COMPANY SETTINGS                    -->
+      <!-- ===================================================================== -->
+      <section id="view-settings" class="hidden space-y-6">
+        <!-- Live Firebase Sync Configuration Box -->
+        <div class="bg-gradient-to-l from-slate-900 to-blue-950 text-white p-6 rounded-xl border border-blue-800 shadow-sm space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h2 class="text-lg font-extrabold text-white">🔥 المزامنة الحية السحابية الفورية (Firebase Realtime Database)</h2>
+              <p class="text-xs text-blue-200">الرابط الخاص بقاعدتك مضاف جاهزاً بالأسفل ومرتبط بجميع الأجهزة لحظياً</p>
+            </div>
+            <span id="settingsSyncIndicator" class="px-3 py-1 rounded-full text-xs font-bold bg-white/10 text-blue-200">
+              جاري التحقق من الاتصال...
+            </span>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
+            <div class="md:col-span-2">
+              <label class="block text-xs font-bold text-blue-200 mb-1">رابط قاعدة بيانات Firebase (Realtime Database URL)</label>
+              <input type="text" id="firebaseDbUrlInput" value="https://creationgfx-5a8de-default-rtdb.firebaseio.com" class="w-full rounded-lg px-3 py-2.5 text-sm font-mono text-slate-900 bg-white border-2 border-blue-400" />
+            </div>
+            <div class="flex gap-2">
+              <button onclick="connectAndSyncFirebase()" class="flex-1 py-2.5 px-4 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow">
+                🔗 تفعيل ومزامنة الآن
+              </button>
+              <button onclick="pullFromFirebaseManual()" class="py-2.5 px-3 rounded-lg bg-blue-700 hover:bg-blue-600 text-white font-bold text-xs shadow" title="سحب أحدث البيانات من السحابة">
+                📥 سحب
+              </button>
+            </div>
+          </div>
+
+          <!-- Local Backup / Restore JSON -->
+          <div class="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-white/10 text-xs">
+            <span class="text-slate-300">نسخ احتياطي محلي إضافي على جهاز الكمبيوتر (ملف JSON):</span>
+            <div class="flex gap-2">
+              <button onclick="exportBackupJson()" class="px-3 py-1.5 rounded bg-white/10 hover:bg-white/20 text-white font-bold">
+                💾 تحميل نسخة احتياطية على الكمبيوتر
+              </button>
+              <label class="px-3 py-1.5 rounded bg-white/10 hover:bg-white/20 text-white font-bold cursor-pointer">
+                📂 استعادة نسخة احتياطية من ملف
+                <input type="file" accept=".json" class="hidden" onchange="importBackupJson(event)" />
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Company Settings Box -->
+        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm max-w-4xl">
+          <h2 class="text-lg font-extrabold text-blue-950 mb-1">🏢 ضبط معلومات الشركة والفاتورة والشعار</h2>
+          <p class="text-xs text-slate-500 mb-5 pb-3 border-b">يظهر اسم الشركة مرة واحدة في يمين الفاتورة، ويظهر الشعار الأفقي في يسار الفاتورة عند رفعه</p>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm mb-5">
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">اسم الشركة (بالعربية)</label>
+              <input type="text" id="setCompanyAr" class="w-full border rounded-lg px-3 py-2 font-bold" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">اسم الشركة (بالإنجليزية)</label>
+              <input type="text" id="setCompanyEn" class="w-full border rounded-lg px-3 py-2 font-bold" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">وصف النشاط أسفل اسم الشركة</label>
+              <input type="text" id="setCompanyTagline" class="w-full border rounded-lg px-3 py-2" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">أرقام الهواتف والتواصل</label>
+              <input type="text" id="setCompanyPhone" class="w-full border rounded-lg px-3 py-2" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">عنوان الشركة</label>
+              <input type="text" id="setCompanyAddress" class="w-full border rounded-lg px-3 py-2" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">الرقم الضريبي / السجل التجاري (اختياري)</label>
+              <input type="text" id="setCompanyTax" class="w-full border rounded-lg px-3 py-2" />
+            </div>
+            <div class="sm:col-span-2">
+              <label class="block text-xs font-bold text-slate-700 mb-1">شروط الدفع وملاحظات تذييل الفاتورة</label>
+              <input type="text" id="setCompanyFooter" class="w-full border rounded-lg px-3 py-2" />
+            </div>
+          </div>
+
+          <div class="flex flex-wrap items-center justify-between gap-4 pt-4 border-t">
+            <div class="flex items-center gap-2">
+              <label class="px-4 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold cursor-pointer border">
+                📷 اختيار شعار أفقي للشركة (PNG / JPG / SVG)
+                <input type="file" accept="image/png,image/jpeg,image/svg+xml" class="hidden" onchange="uploadLogoFromSettings(event)" />
+              </label>
+              <button onclick="removeCompanyLogo()" class="px-3 py-2 rounded-lg bg-red-50 hover:bg-red-100 text-red-700 text-xs font-bold border border-red-200">
+                🗑️ إزالة الشعار
+              </button>
+            </div>
+            <button onclick="saveCompanySettings()" class="px-6 py-2.5 rounded-lg bg-blue-900 hover:bg-blue-800 text-white font-bold text-sm shadow">
+              💾 حفظ بيانات الشركة ومزامنتها
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================================================================== -->
+      <!-- VIEW 7: DASHBOARD                                                     -->
+      <!-- ===================================================================== -->
+      <section id="view-dashboard" class="hidden space-y-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" id="dashboardCards"></div>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+            <h3 class="font-bold text-slate-800 mb-3">أحدث أوامر الشغل والإنتاج</h3>
+            <div id="dashJobsList" class="space-y-2 text-sm"></div>
+          </div>
+          <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+            <h3 class="font-bold text-slate-800 mb-3">أرصدة الرولات والخامات</h3>
+            <div id="dashStockList" class="space-y-2 text-sm"></div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <script>
+    // ============================================================================
+    // 1. EXACT DECIMAL FINANCIAL & PRINTING/WASTE CALCULATION CORE
+    // ============================================================================
+    const round2 = (n) => Math.round((Number(n) + Number.EPSILON) * 100) / 100;
+    const round4 = (n) => Math.round((Number(n) + Number.EPSILON) * 10000) / 10000;
+
+    function formatEGP(val, lang = state.lang) {
+      const num = round2(val || 0);
+      return lang === 'ar'
+        ? num.toLocaleString('ar-EG', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ج.م'
+        : 'EGP ' + num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    // Helper to strip any pricing tier text from customer-facing invoice descriptions
+    function stripTierFromText(text) {
+      return String(text || '').replace(/\s*\[فئة:.*?\]\s*/g, ' ').replace(/\s+/g, ' ').trim();
+    }
+
+    function calculatePrintingAndWasteEngine({
+      printLength,
+      printWidth,
+      rollWidth,
+      unit = 'CM',
+      quantity = 1,
+      priceCategoryRate = 100,
+      wastePricePerSqM = 60,
+      manualWasteArea = null
+    }) {
+      const L = unit === 'CM' ? Number(printLength) / 100 : Number(printLength);
+      const W = unit === 'CM' ? Number(printWidth) / 100 : Number(printWidth);
+      const RW = Number(rollWidth);
+      const Q = Number(quantity);
+      const rate = Number(priceCategoryRate);
+      const wasteRate = Number(wastePricePerSqM);
+
+      if (L <= 0 || W <= 0 || RW <= 0 || Q <= 0) {
+        throw new Error('يجب أن تكون جميع الأبعاد والكميات أكبر من صفر.');
+      }
+      if (W > RW) {
+        throw new Error(
+          `خطأ تحقّق: عرض الطباعة (${W} م / ${round2(W * 100)} سم) أكبر من عرض رول الخامة (${RW} م / ${round2(RW * 100)} سم)! لا يمكن حساب هالك سالب.`
+        );
+      }
+
+      const baseArea = round4(L * W * Q);
+      const basePrice = round2(baseArea * rate);
+      const remainingWidth = round4(RW - W);
+      const theoreticalWasteArea = round4(remainingWidth * L * Q);
+      const hasManualOverride = manualWasteArea !== null && manualWasteArea !== '' && !isNaN(Number(manualWasteArea));
+      const effectiveWasteArea = hasManualOverride ? round4(Number(manualWasteArea)) : theoreticalWasteArea;
+      const totalWasteCost = round2(effectiveWasteArea * wasteRate);
+      const finalPrintingPrice = round2(basePrice + totalWasteCost);
+
+      return {
+        printLengthMeters: L,
+        printWidthMeters: W,
+        rollWidthMeters: RW,
+        remainingWidthMeters: remainingWidth,
+        baseArea,
+        basePrice,
+        theoreticalWasteArea,
+        effectiveWasteArea,
+        hasManualOverride,
+        wasteUnitPrice: wasteRate,
+        totalWasteCost,
+        finalPrintingPrice
+      };
+    }
+
+    // ============================================================================
+    // 2. PERSISTENT DATABASE STATE + FIREBASE REALTIME ENGINE
+    // ============================================================================
+    const STORAGE_KEY = 'CREATIONGFX_ERP_FIREBASE_V6';
+    const constFIREBASE_URL_KEY = 'CREATIONGFX_FIREBASE_DB_URL';
+    const DEFAULT_FIREBASE_URL = 'https://creationgfx-5a8de-default-rtdb.firebaseio.com';
+
+    const DEFAULT_STATE = {
+      updatedAt: Date.now(),
+      lang: 'ar',
+      role: 'ADMIN',
+      companyNameAr: 'كرييشن للدعاية والإعلان والطباعة الرقمية',
+      companyNameEn: 'CreationGFX Advertising & Large-Format Printing',
+      companyTagline: 'طباعة رقمية • لافتات • واجهات كلادينج • تصميم • تركيب',
+      companyPhone: '01000000000 - 01200000000',
+      companyAddress: 'جمهورية مصر العربية',
+      companyTax: 'س.ت: 123456 | ب.ض: 987-654-321',
+      companyFooter: 'الأسعار بالجنيه المصري. الدفع 50% عند التعاقد و50% عند الاستلام. شكراً لتعاملكم معنا.',
+      logoDataUrl: null,
+      tierNames: {
+        tier1: 'أفراد / قطاعي',
+        tier2: 'شركات ومؤسسات',
+        tier3: 'وكالات دعاية',
+        tier4: 'جملة / كميات'
+      },
+      customers: [
+        { id: 'CUST-01', name: 'شركة النور للمقاولات والتطوير', phone: '01012345678', tier: 2, address: 'القاهرة - التجمع الخامس' },
+        { id: 'CUST-02', name: 'سلسلة مطاعم الذواقة', phone: '01298765432', tier: 1, address: 'الزقازيق - شارع القومية' },
+        { id: 'CUST-03', name: 'وكالة المبدع للدعاية والإعلان', phone: '01122334455', tier: 3, address: 'المنصورة' }
+      ],
+      materials: [
+        {
+          sku: 'BNR-320',
+          nameAr: 'بانر فرونت لايت 440 جرام (عرض 3.20 م)',
+          rollWidth: 3.20,
+          priceCat1: 110,
+          priceCat2: 95,
+          priceCat3: 85,
+          priceCat4: 75,
+          wasteRateSqM: 60,
+          costSqM: 45,
+          stockSqM: 320,
+          minSqM: 80
+        },
+        {
+          sku: 'BNR-220',
+          nameAr: 'بانر فرونت لايت متوسط (عرض 2.20 م)',
+          rollWidth: 2.20,
+          priceCat1: 110,
+          priceCat2: 95,
+          priceCat3: 85,
+          priceCat4: 75,
+          wasteRateSqM: 60,
+          costSqM: 45,
+          stockSqM: 210,
+          minSqM: 60
+        },
+        {
+          sku: 'VNL-152',
+          nameAr: 'فينيل لامع/مط ألماني (عرض 1.52 م)',
+          rollWidth: 1.52,
+          priceCat1: 150,
+          priceCat2: 135,
+          priceCat3: 120,
+          priceCat4: 105,
+          wasteRateSqM: 85,
+          costSqM: 75,
+          stockSqM: 95,
+          minSqM: 50
+        },
+        {
+          sku: 'OWV-127',
+          nameAr: 'وان واي فيجن مثقب للواجهات (عرض 1.27 م)',
+          rollWidth: 1.27,
+          priceCat1: 170,
+          priceCat2: 150,
+          priceCat3: 135,
+          priceCat4: 120,
+          wasteRateSqM: 95,
+          costSqM: 85,
+          stockSqM: 140,
+          minSqM: 40
+        }
+      ],
+      jobs: [
+        {
+          id: 'JOB-1001',
+          customerId: 'CUST-01',
+          description: 'طباعة بانر واجهة 500سم × 200سم على رول 3.20م + تصميم + تركيب',
+          status: 'IN_PRODUCTION',
+          netRevenue: 2440,
+          actualMaterialCost: 450,
+          actualWasteCost: 270,
+          wasteIncludedInMaterial: false,
+          directLaborAndInstallCost: 650
+        }
+      ],
+      invoices: [
+        {
+          id: 'INV-2001',
+          jobId: 'JOB-1001',
+          customerId: 'CUST-01',
+          date: '2026-10-19',
+          subtotal: 2760,
+          overPrice: 0,
+          discountAmount: 320,
+          grandTotal: 2440,
+          paidAmount: 1000,
+          status: 'PARTIALLY_PAID',
+          notes: 'خصم خاص للعميل 320 ج.م',
+          items: [
+            { desc: 'طباعة بانر فرونت لايت 440 جرام (مقاس: 500سم × 200سم) + خدمات التصميم والتركيب', qty: 1, price: 2760, total: 2760 }
+          ]
+        }
+      ],
+      operatingExpenses: 850
+    };
+
+    let state = loadState();
+    let firebaseDbUrl = localStorage.getItem(constFIREBASE_URL_KEY) || DEFAULT_FIREBASE_URL;
+    let firebaseEventSource = null;
+    let isApplyingRemoteUpdate = false;
+    let selectedInvoiceId = state.invoices[0]?.id || null;
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return JSON.parse(JSON.stringify(DEFAULT_STATE));
+        return { ...JSON.parse(JSON.stringify(DEFAULT_STATE)), ...JSON.parse(raw) };
+      } catch {
+        return JSON.parse(JSON.stringify(DEFAULT_STATE));
+      }
+    }
+
+    function normalizeFirebaseUrl(url) {
+      let clean = (url || '').trim().replace(/\/+$/, '');
+      if (clean.endsWith('.json')) clean = clean.replace(/\/erp_state\.json$|\/[^/]+\.json$/, '');
+      return clean;
+    }
+
+    function saveState() {
+      state.updatedAt = Date.now();
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      renderAll();
+      if (firebaseDbUrl && !isApplyingRemoteUpdate) {
+        pushToFirebaseCloud();
+      }
+    }
+
+    async function pushToFirebaseCloud() {
+      if (!firebaseDbUrl) return;
+      const endpoint = `${normalizeFirebaseUrl(firebaseDbUrl)}/erp_state.json`;
+      try {
+        updateCloudBadge('syncing');
+        const res = await fetch(endpoint, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(state)
+        });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        updateCloudBadge('connected');
+      } catch (e) {
+        updateCloudBadge('error');
+      }
+    }
+
+    async function pullFromFirebaseManual(silent = false) {
+      const inputEl = document.getElementById('firebaseDbUrlInput');
+      const inputUrl = normalizeFirebaseUrl((inputEl && inputEl.value) ? inputEl.value : firebaseDbUrl);
+      if (!inputUrl) {
+        if (!silent) alert('يرجى إدخال رابط Firebase Realtime Database أولاً.');
+        return;
+      }
+      firebaseDbUrl = inputUrl;
+      localStorage.setItem(constFIREBASE_URL_KEY, firebaseDbUrl);
+
+      try {
+        updateCloudBadge('syncing');
+        const res = await fetch(`${firebaseDbUrl}/erp_state.json`);
+        const remoteData = await res.json();
+        if (remoteData && remoteData.materials) {
+          isApplyingRemoteUpdate = true;
+          state = { ...JSON.parse(JSON.stringify(DEFAULT_STATE)), ...remoteData };
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+          renderAll();
+          isApplyingRemoteUpdate = false;
+          updateCloudBadge('connected');
+          if (!silent) alert('✅ تم سحب أحدث البيانات من سحابة Firebase بنجاح!');
+        } else {
+          await pushToFirebaseCloud();
+          if (!silent) alert('✅ تم رفع بيانات النظام الأولية إلى سحابة Firebase وتفعيل المزامنة الحية!');
+        }
+        startRealtimeStream();
+      } catch (err) {
+        updateCloudBadge('error');
+        if (!silent) alert('❌ تعذر الاتصال برابط Firebase. تأكد من الاتصال بالإنترنت وأن القاعدة في وضع Test Mode.');
+      }
+    }
+
+    function connectAndSyncFirebase() {
+      pullFromFirebaseManual(false);
+    }
+
+    function startRealtimeStream() {
+      if (!firebaseDbUrl || typeof EventSource === 'undefined') return;
+      if (firebaseEventSource) firebaseEventSource.close();
+
+      try {
+        const streamUrl = `${normalizeFirebaseUrl(firebaseDbUrl)}/erp_state.json`;
+        firebaseEventSource = new EventSource(streamUrl);
+
+        firebaseEventSource.addEventListener('put', (e) => {
+          try {
+            const packet = JSON.parse(e.data);
+            if (packet && packet.path === '/' && packet.data && packet.data.updatedAt) {
+              if (packet.data.updatedAt > (state.updatedAt || 0)) {
+                isApplyingRemoteUpdate = true;
+                state = { ...JSON.parse(JSON.stringify(DEFAULT_STATE)), ...packet.data };
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+                renderAll();
+                isApplyingRemoteUpdate = false;
+                updateCloudBadge('connected');
+              }
+            }
+          } catch {}
+        });
+
+        firebaseEventSource.onerror = () => {
+          updateCloudBadge('connected');
+        };
+      } catch {}
+    }
+
+    function updateCloudBadge(status) {
+      const topBadge = document.getElementById('cloudStatusBadge');
+      const setBadge = document.getElementById('settingsSyncIndicator');
+      if (status === 'connected') {
+        topBadge.textContent = '🟢 متصل ومزامن حياً (Firebase Live)';
+        topBadge.className = 'cursor-pointer px-3 py-1.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-900 border border-emerald-300';
+        if (setBadge) setBadge.textContent = '🟢 متصل ومزامن لحظياً مع جميع الأجهزة';
+      } else if (status === 'syncing') {
+        topBadge.textContent = '⏳ جاري المزامنة السحابية...';
+        topBadge.className = 'cursor-pointer px-3 py-1.5 rounded-full text-xs font-bold bg-amber-100 text-amber-900 border border-amber-300';
+      } else if (status === 'error') {
+        topBadge.textContent = '🔴 خطأ اتصال بالسحابة (حفظ محلي مؤقت)';
+        topBadge.className = 'cursor-pointer px-3 py-1.5 rounded-full text-xs font-bold bg-red-100 text-red-900 border border-red-300';
+      } else {
+        topBadge.textContent = '⚪ وضع الحفظ المحلي (اضغط لربط Firebase)';
+        topBadge.className = 'cursor-pointer px-3 py-1.5 rounded-full text-xs font-bold bg-slate-100 text-slate-700 border';
+      }
+    }
+
+    function exportBackupJson() {
+      const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `CreationGFX_ERP_Backup_${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+    }
+
+    function importBackupJson(event) {
+      const file = event.target.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const parsed = JSON.parse(reader.result);
+          if (parsed && parsed.materials && parsed.customers) {
+            state = { ...JSON.parse(JSON.stringify(DEFAULT_STATE)), ...parsed };
+            saveState();
+            alert('✅ تمت استعادة النسخة الاحتياطية بنجاح!');
+          }
+        } catch {
+          alert('❌ ملف النسخة الاحتياطية غير صالح.');
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    // ============================================================================
+    // 3. COMPANY SETTINGS & LOGO (SINGLE COMPANY NAME - NO DUPLICATION)
+    // ============================================================================
+    function renderCompanySettingsForm() {
+      document.getElementById('firebaseDbUrlInput').value = firebaseDbUrl || DEFAULT_FIREBASE_URL;
+      document.getElementById('setCompanyAr').value = state.companyNameAr || '';
+      document.getElementById('setCompanyEn').value = state.companyNameEn || '';
+      document.getElementById('setCompanyTagline').value = state.companyTagline || '';
+      document.getElementById('setCompanyPhone').value = state.companyPhone || '';
+      document.getElementById('setCompanyAddress').value = state.companyAddress || '';
+      document.getElementById('setCompanyTax').value = state.companyTax || '';
+      document.getElementById('setCompanyFooter').value = state.companyFooter || '';
+    }
+
+    function saveCompanySettings() {
+      state.companyNameAr = document.getElementById('setCompanyAr').value.trim() || 'شركة الدعاية والإعلان';
+      state.companyNameEn = document.getElementById('setCompanyEn').value.trim() || 'Advertising ERP';
+      state.companyTagline = document.getElementById('setCompanyTagline').value.trim();
+      state.companyPhone = document.getElementById('setCompanyPhone').value.trim();
+      state.companyAddress = document.getElementById('setCompanyAddress').value.trim();
+      state.companyTax = document.getElementById('setCompanyTax').value.trim();
+      state.companyFooter = document.getElementById('setCompanyFooter').value.trim();
+      saveState();
+      alert('✅ تم حفظ بيانات الشركة وتحديث الفواتير بنجاح!');
+    }
+
+    function uploadLogoFromSettings(e) {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        state.logoDataUrl = reader.result;
+        saveState();
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function removeCompanyLogo() {
+      state.logoDataUrl = null;
+      saveState();
+    }
+
+    document.getElementById('logoInput').addEventListener('change', uploadLogoFromSettings);
+
+    function renderLogo() {
+      const box = document.getElementById('sidebarLogoContainer');
+      const title = state.lang === 'ar' ? state.companyNameAr : state.companyNameEn;
+      if (state.logoDataUrl) {
+        box.innerHTML = `<img src="${state.logoDataUrl}" alt="${title}" />`;
+      } else {
+        box.innerHTML = `<span class="text-sm font-bold text-blue-300 text-center">${title}</span>`;
+      }
+    }
+
+    // ============================================================================
+    // 4. CUSTOM TIER NAMES & MATERIALS CRUD
+    // ============================================================================
+    function getTierNameByNumber(tierNum) {
+      const t = state.tierNames || DEFAULT_STATE.tierNames;
+      const n = Number(tierNum || 1);
+      return n === 1 ? t.tier1 : n === 2 ? t.tier2 : n === 3 ? t.tier3 : t.tier4;
+    }
+
+    function initTierInputsFromState() {
+      const t = state.tierNames || DEFAULT_STATE.tierNames;
+      const in1 = document.getElementById('customTierName1');
+      const in2 = document.getElementById('customTierName2');
+      const in3 = document.getElementById('customTierName3');
+      const in4 = document.getElementById('customTierName4');
+
+      if (document.activeElement !== in1) in1.value = t.tier1;
+      if (document.activeElement !== in2) in2.value = t.tier2;
+      if (document.activeElement !== in3) in3.value = t.tier3;
+      if (document.activeElement !== in4) in4.value = t.tier4;
+
+      document.getElementById('lblMatPrice1').textContent = `1️⃣ ${t.tier1}`;
+      document.getElementById('lblMatPrice2').textContent = `2️⃣ ${t.tier2}`;
+      document.getElementById('lblMatPrice3').textContent = `3️⃣ ${t.tier3}`;
+      document.getElementById('lblMatPrice4').textContent = `4️⃣ ${t.tier4}`;
+
+      document.getElementById('thTier1').textContent = t.tier1;
+      document.getElementById('thTier2').textContent = t.tier2;
+      document.getElementById('thTier3').textContent = t.tier3;
+      document.getElementById('thTier4').textContent = t.tier4;
+
+      // Also populate the Customer Registration Tier Select dropdown
+      const custTierSel = document.getElementById('newCustTier');
+      if (custTierSel) {
+        const prevVal = custTierSel.value || '1';
+        custTierSel.innerHTML = `
+          <option value="1">1️⃣ ${t.tier1}</option>
+          <option value="2">2️⃣ ${t.tier2}</option>
+          <option value="3">3️⃣ ${t.tier3}</option>
+          <option value="4">4️⃣ ${t.tier4}</option>
+        `;
+        custTierSel.value = prevVal;
+      }
+    }
+
+    function saveTierNamesLive(showNotification = false) {
+      state.tierNames = {
+        tier1: document.getElementById('customTierName1').value.trim() || 'فئة 1',
+        tier2: document.getElementById('customTierName2').value.trim() || 'فئة 2',
+        tier3: document.getElementById('customTierName3').value.trim() || 'فئة 3',
+        tier4: document.getElementById('customTierName4').value.trim() || 'فئة 4'
+      };
+      saveState();
+      if (showNotification) alert('✅ تم حفظ ومزامنة مسميات الفئات السعرية الأربع!');
+    }
+
+    function applyTierPreset(presetType) {
+      state.tierNames = presetType === 'commercial'
+        ? { tier1: 'أفراد / قطاعي', tier2: 'شركات ومؤسسات', tier3: 'وكالات دعاية', tier4: 'جملة / كميات' }
+        : { tier1: 'سعر قياسي / عادي', tier2: 'سعر تجاري / كميات', tier3: 'سعر ممتاز / دقة عالية', tier4: 'سعر مستعجل / VIP' };
+      saveState();
+      onCalculatorMaterialOrTierChange();
+    }
+
+    function populateCalculatorTierDropdown() {
+      const matIdx = Number(document.getElementById('calcMaterialSelect').value || 0);
+      const mat = state.materials[matIdx] || state.materials[0];
+      const tierSelect = document.getElementById('calcTierSelect');
+      const currentTier = tierSelect.value || '1';
+      const t = state.tierNames || DEFAULT_STATE.tierNames;
+      if (!mat) return;
+
+      tierSelect.innerHTML = `
+        <option value="1">1️⃣ ${t.tier1} — (${formatEGP(mat.priceCat1)} / م²)</option>
+        <option value="2">2️⃣ ${t.tier2} — (${formatEGP(mat.priceCat2)} / م²)</option>
+        <option value="3">3️⃣ ${t.tier3} — (${formatEGP(mat.priceCat3)} / م²)</option>
+        <option value="4">4️⃣ ${t.tier4} — (${formatEGP(mat.priceCat4)} / م²)</option>
+      `;
+      tierSelect.value = currentTier;
+    }
+
+    function renderMaterialsTab() {
+      initTierInputsFromState();
+      const tbody = document.getElementById('materialsTableBody');
+      tbody.innerHTML = state.materials
+        .map(
+          (m, idx) => `
+        <tr class="hover:bg-slate-50">
+          <td class="p-3 font-bold text-slate-700">${m.sku}</td>
+          <td class="p-3 font-extrabold text-slate-900">${m.nameAr}</td>
+          <td class="p-3 text-center font-extrabold text-blue-900 bg-blue-50/50">${Number(m.rollWidth).toFixed(2)} م (${round2(m.rollWidth * 100)} سم)</td>
+          <td class="p-3 text-center font-bold text-blue-800">${formatEGP(m.priceCat1)}</td>
+          <td class="p-3 text-center font-bold text-emerald-800">${formatEGP(m.priceCat2)}</td>
+          <td class="p-3 text-center font-bold text-purple-900">${formatEGP(m.priceCat3)}</td>
+          <td class="p-3 text-center font-bold text-rose-800">${formatEGP(m.priceCat4)}</td>
+          <td class="p-3 text-center font-bold text-amber-800">${formatEGP(m.wasteRateSqM)}</td>
+          <td class="p-3 text-center text-slate-600">${formatEGP(m.costSqM)}</td>
+          <td class="p-3 text-center font-bold">${m.stockSqM} m²</td>
+          <td class="p-3 text-center">
+            <div class="flex items-center justify-center gap-1.5">
+              <button onclick="editMaterial(${idx})" class="px-2.5 py-1 rounded bg-amber-100 hover:bg-amber-200 text-amber-900 text-xs font-bold">✏️ تعديل</button>
+              <button onclick="deleteMaterial(${idx})" class="px-2.5 py-1 rounded bg-red-100 hover:bg-red-200 text-red-800 text-xs font-bold">🗑️ حذف</button>
+            </div>
+          </td>
+        </tr>`
+        )
+        .join('');
+
+      const calcMatSelect = document.getElementById('calcMaterialSelect');
+      const prevSelected = calcMatSelect.value;
+      calcMatSelect.innerHTML = state.materials
+        .map((m, idx) => `<option value="${idx}">${m.nameAr} — [عرض الرول: ${Number(m.rollWidth).toFixed(2)} م / ${round2(m.rollWidth * 100)} سم]</option>`)
+        .join('');
+      if (prevSelected && state.materials[Number(prevSelected)]) {
+        calcMatSelect.value = prevSelected;
+      }
+      populateCalculatorTierDropdown();
+    }
+
+    function saveMaterial() {
+      const editIdx = Number(document.getElementById('editMatIndex').value);
+      const sku = document.getElementById('matSku').value.trim() || 'MAT-' + (state.materials.length + 1);
+      const nameAr = document.getElementById('matName').value.trim();
+      const rollWidth = Number(document.getElementById('matRollWidth').value);
+      const stockSqM = Number(document.getElementById('matStock').value || 0);
+      const priceCat1 = Number(document.getElementById('matPrice1').value || 0);
+      const priceCat2 = Number(document.getElementById('matPrice2').value || 0);
+      const priceCat3 = Number(document.getElementById('matPrice3').value || 0);
+      const priceCat4 = Number(document.getElementById('matPrice4').value || 0);
+      const wasteRateSqM = Number(document.getElementById('matWastePrice').value || 0);
+      const costSqM = Number(document.getElementById('matCost').value || 0);
+
+      if (!nameAr || rollWidth <= 0) return alert('يرجى إدخال اسم الخامة وعرض رول صحيح.');
+
+      const matObj = { sku, nameAr, rollWidth, priceCat1, priceCat2, priceCat3, priceCat4, wasteRateSqM, costSqM, stockSqM, minSqM: 50 };
+      if (editIdx >= 0 && editIdx < state.materials.length) state.materials[editIdx] = matObj;
+      else state.materials.push(matObj);
+
+      resetMaterialForm();
+      saveState();
+      onCalculatorMaterialOrTierChange();
+    }
+
+    function editMaterial(idx) {
+      const m = state.materials[idx];
+      if (!m) return;
+      document.getElementById('editMatIndex').value = idx;
+      document.getElementById('matSku').value = m.sku;
+      document.getElementById('matName').value = m.nameAr;
+      document.getElementById('matRollWidth').value = m.rollWidth;
+      document.getElementById('matStock').value = m.stockSqM;
+      document.getElementById('matPrice1').value = m.priceCat1;
+      document.getElementById('matPrice2').value = m.priceCat2;
+      document.getElementById('matPrice3').value = m.priceCat3;
+      document.getElementById('matPrice4').value = m.priceCat4;
+      document.getElementById('matWastePrice').value = m.wasteRateSqM;
+      document.getElementById('matCost').value = m.costSqM;
+      document.getElementById('matFormTitle').textContent = `✏️ تعديل الخامة: ${m.nameAr}`;
+      document.getElementById('saveMatBtn').textContent = '💾 حفظ التعديلات على الخامة';
+      document.getElementById('cancelEditMatBtn').classList.remove('hidden');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function deleteMaterial(idx) {
+      if (state.materials.length <= 1) return alert('يجب بقاء خامة واحدة على الأقل.');
+      if (!confirm(`هل أنت متأكد من حذف الخامة "${state.materials[idx].nameAr}"؟`)) return;
+      state.materials.splice(idx, 1);
+      resetMaterialForm();
+      saveState();
+      onCalculatorMaterialOrTierChange();
+    }
+
+    function resetMaterialForm() {
+      document.getElementById('editMatIndex').value = '-1';
+      document.getElementById('matSku').value = '';
+      document.getElementById('matName').value = '';
+      document.getElementById('matRollWidth').value = '3.20';
+      document.getElementById('matFormTitle').textContent = 'إضافة خامة طباعة جديدة وتحديد عرض الرول وأسعار الفئات الـ 4';
+      document.getElementById('saveMatBtn').textContent = '➕ حفظ وإضافة الخامة إلى النظام';
+      document.getElementById('cancelEditMatBtn').classList.add('hidden');
+    }
+
+    // ============================================================================
+    // 5. CALCULATOR (AUTO CUSTOMER TIER + NO TIER ON CUSTOMER INVOICE)
+    // ============================================================================
+    function onCalculatorCustomerChange() {
+      const custId = document.getElementById('qCustomer').value;
+      const cust = state.customers.find((c) => c.id === custId);
+      if (cust && cust.tier) {
+        document.getElementById('calcTierSelect').value = String(cust.tier);
+        onCalculatorMaterialOrTierChange();
+      }
+    }
+
+    function onUnitSelectChange() {
+      const unit = document.getElementById('calcUnit').value;
+      const lenInput = document.getElementById('calcLength');
+      const widInput = document.getElementById('calcWidth');
+      if (unit === 'CM') {
+        document.getElementById('lblPrintLengthInput').textContent = 'طول الطباعة بالسنتيمتر (cm)';
+        document.getElementById('lblPrintWidthInput').textContent = 'عرض الطباعة بالسنتيمتر (cm)';
+        if (Number(lenInput.value) <= 20) lenInput.value = round2(Number(lenInput.value) * 100);
+        if (Number(widInput.value) <= 20) widInput.value = round2(Number(widInput.value) * 100);
+      } else {
+        document.getElementById('lblPrintLengthInput').textContent = 'طول الطباعة بالمتر (m)';
+        document.getElementById('lblPrintWidthInput').textContent = 'عرض الطباعة بالمتر (m)';
+        if (Number(lenInput.value) >= 50) lenInput.value = round2(Number(lenInput.value) / 100);
+        if (Number(widInput.value) >= 50) widInput.value = round2(Number(widInput.value) / 100);
+      }
+      runLivePrintCalc();
+    }
+
+    function onCalculatorMaterialOrTierChange() {
+      populateCalculatorTierDropdown();
+      const matIdx = Number(document.getElementById('calcMaterialSelect').value || 0);
+      const tier = Number(document.getElementById('calcTierSelect').value || 1);
+      const mat = state.materials[matIdx];
+      if (!mat) return;
+
+      const selectedTierName = getTierNameByNumber(tier);
+      document.getElementById('calcRollWidth').value = Number(mat.rollWidth).toFixed(2);
+      document.getElementById('calcWasteRate').value = mat.wasteRateSqM;
+
+      const tierRate = tier === 1 ? mat.priceCat1 : tier === 2 ? mat.priceCat2 : tier === 3 ? mat.priceCat3 : mat.priceCat4;
+      document.getElementById('calcRate').value = tierRate;
+      document.getElementById('calcRateLabel').textContent = `سعر المتر لفئة (${selectedTierName}) (ج.م/م²)`;
+      runLivePrintCalc();
+    }
+
+    function runLivePrintCalc() {
+      const errBox = document.getElementById('calcErrorBox');
+      try {
+        const res = calculatePrintingAndWasteEngine({
+          printLength: document.getElementById('calcLength').value,
+          printWidth: document.getElementById('calcWidth').value,
+          rollWidth: document.getElementById('calcRollWidth').value,
+          unit: document.getElementById('calcUnit').value,
+          quantity: document.getElementById('calcQty').value,
+          priceCategoryRate: document.getElementById('calcRate').value,
+          wastePricePerSqM: document.getElementById('calcWasteRate').value,
+          manualWasteArea: document.getElementById('calcManualWaste').value
+        });
+
+        const stdTotal = Number(document.getElementById('qStdTotal').value || 0);
+        const design = Number(document.getElementById('qDesign').value || 0);
+        const install = Number(document.getElementById('qInstall').value || 0);
+        const overPrice = Number(document.getElementById('qOverPrice').value || 0);
+        const discountFixed = Number(document.getElementById('qDiscountFixed').value || 0);
+
+        const preDiscount = round2(res.finalPrintingPrice + stdTotal + design + install + overPrice);
+        if (discountFixed < 0 || discountFixed > preDiscount) {
+          throw new Error(`خطأ تحقّق: قيمة الخصم اليدوي (${formatEGP(discountFixed)}) لا يمكن أن تتجاوز الإجمالي قبل الخصم (${formatEGP(preDiscount)}).`);
+        }
+
+        errBox.classList.add('hidden');
+
+        document.getElementById('outBaseAreaVal').textContent = `${res.baseArea.toFixed(2)} m²`;
+        document.getElementById('outBasePriceVal').textContent = formatEGP(res.basePrice);
+        document.getElementById('outRollWVal').textContent = `${res.rollWidthMeters.toFixed(2)} م (${round2(res.rollWidthMeters * 100)} سم)`;
+        document.getElementById('outPrintWVal').textContent = `${res.printWidthMeters.toFixed(2)} م (${round2(res.printWidthMeters * 100)} سم)`;
+        document.getElementById('outRemWVal').textContent = `${res.remainingWidthMeters.toFixed(2)} م (${round2(res.remainingWidthMeters * 100)} سم)`;
+        document.getElementById('outWasteAreaVal').textContent =
+          `${res.effectiveWasteArea.toFixed(2)} m²` +
+          (res.hasManualOverride ? ` (الأصلي: ${res.theoreticalWasteArea.toFixed(2)} m²)` : '');
+        document.getElementById('outWasteUnitVal').textContent = formatEGP(res.wasteUnitPrice);
+        document.getElementById('outWasteCostVal').textContent = formatEGP(res.totalWasteCost);
+        document.getElementById('outFinalPrintVal').textContent = formatEGP(res.finalPrintingPrice);
+
+        const grandTotal = round2(preDiscount - discountFixed);
+
+        document.getElementById('qPreDiscountVal').textContent = formatEGP(preDiscount);
+        document.getElementById('qDiscountAmtVal').textContent = formatEGP(discountFixed);
+        document.getElementById('qGrandTotalVal').textContent = formatEGP(grandTotal);
+
+        return { res, preDiscount, discountAmt: discountFixed, grandTotal, design, install, stdTotal, overPrice };
+      } catch (e) {
+        errBox.textContent = e.message;
+        errBox.classList.remove('hidden');
+        return null;
+      }
+    }
+
+    function createQuotationJobAndInvoice() {
+      const calc = runLivePrintCalc();
+      if (!calc) return;
+      const custId = document.getElementById('qCustomer').value;
+      const matIdx = Number(document.getElementById('calcMaterialSelect').value || 0);
+      const mat = state.materials[matIdx] || { nameAr: 'خامة طباعة', costSqM: 45 };
+      const jobNum = 'JOB-' + (1001 + state.jobs.length);
+      const invNum = 'INV-' + (2001 + state.invoices.length);
+
+      const lengthCm = round2(calc.res.printLengthMeters * 100);
+      const widthCm = round2(calc.res.printWidthMeters * 100);
+      const qtyNum = Number(document.getElementById('calcQty').value || 1);
+
+      // Clean description WITHOUT pricing category name for the customer invoice
+      const cleanCustomerDesc = `طباعة ${mat.nameAr} (مقاس: ${lengthCm}سم × ${widthCm}سم — العدد: ${qtyNum})`;
+
+      state.jobs.unshift({
+        id: jobNum,
+        customerId: custId,
+        description: `${cleanCustomerDesc} [رول ${calc.res.rollWidthMeters}م]`,
+        status: 'IN_PRODUCTION',
+        netRevenue: calc.grandTotal,
+        actualMaterialCost: round2(calc.res.baseArea * Number(mat.costSqM)),
+        actualWasteCost: round2(calc.res.effectiveWasteArea * Number(mat.costSqM)),
+        wasteIncludedInMaterial: false,
+        directLaborAndInstallCost: round2((calc.design + calc.install) * 0.5)
+      });
+
+      const itemsSubtotal = round2(calc.res.finalPrintingPrice + calc.stdTotal + calc.design + calc.install);
+
+      state.invoices.unshift({
+        id: invNum,
+        jobId: jobNum,
+        customerId: custId,
+        date: new Date().toISOString().slice(0, 10),
+        subtotal: itemsSubtotal,
+        overPrice: calc.overPrice,
+        discountAmount: calc.discountAmt,
+        grandTotal: calc.grandTotal,
+        paidAmount: 0,
+        status: 'ISSUED',
+        notes: calc.discountAmt > 0 ? `تم تطبيق خصم نقدي بقيمة ${formatEGP(calc.discountAmt)}` : '',
+        items: [
+          {
+            desc: cleanCustomerDesc,
+            qty: qtyNum,
+            price: round2(calc.res.finalPrintingPrice / qtyNum),
+            total: calc.res.finalPrintingPrice
+          },
+          ...(calc.stdTotal > 0 ? [{ desc: 'منتجات قياسية إضافية', qty: 1, price: calc.stdTotal, total: calc.stdTotal }] : []),
+          ...(calc.design > 0 ? [{ desc: 'خدمة تصميم جرافيك', qty: 1, price: calc.design, total: calc.design }] : []),
+          ...(calc.install > 0 ? [{ desc: 'خدمة تركيب وتشطيب', qty: 1, price: calc.install, total: calc.install }] : [])
+        ]
+      });
+
+      selectedInvoiceId = invNum;
+      saveState();
+      switchView('invoices');
+    }
+
+    // ============================================================================
+    // 6. JOB ORDERS (RENDER, EDIT, DELETE)
+    // ============================================================================
+    function calcJobProfit(job) {
+      const wasteAdded = job.wasteIncludedInMaterial ? 0 : Number(job.actualWasteCost);
+      const totalDirectCost = round2(Number(job.actualMaterialCost) + wasteAdded + Number(job.directLaborAndInstallCost));
+      const grossProfit = round2(Number(job.netRevenue) - totalDirectCost);
+      const marginPct = Number(job.netRevenue) > 0 ? round2((grossProfit / Number(job.netRevenue)) * 100) : 0;
+      return { totalDirectCost, grossProfit, marginPct, wasteAdded };
+    }
+
+    function renderJobs() {
+      const container = document.getElementById('jobsContainer');
+      const statuses = ['NEW', 'APPROVED', 'IN_PRODUCTION', 'PRINTING_COMPLETED', 'INSTALLED', 'DELIVERED', 'CLOSED'];
+      container.innerHTML = state.jobs
+        .map((j, idx) => {
+          const p = calcJobProfit(j);
+          const cust = state.customers.find((c) => c.id === j.customerId) || { name: 'عميل عام' };
+          return `
+          <div class="p-4 rounded-xl border border-slate-200 bg-slate-50 space-y-3">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <span class="font-extrabold text-blue-950 text-base">${j.id}</span>
+                <span class="text-xs bg-blue-100 text-blue-900 px-2 py-0.5 rounded font-bold mx-1">${cust.name}</span>
+                <span class="text-sm font-semibold text-slate-700 mx-1">${j.description}</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <select onchange="state.jobs[${idx}].status=this.value; saveState();" class="border rounded-lg px-3 py-1 text-xs font-bold bg-white">
+                  ${statuses.map((s) => `<option value="${s}" ${j.status === s ? 'selected' : ''}>${s}</option>`).join('')}
+                </select>
+                <button onclick="openJobEdit(${idx})" class="px-3 py-1 rounded bg-amber-100 hover:bg-amber-200 text-amber-900 text-xs font-bold">
+                  ✏️ تعديل أمر الشغل
+                </button>
+                <button onclick="deleteJobOrder(${idx})" class="px-2.5 py-1 rounded bg-red-100 hover:bg-red-200 text-red-800 text-xs font-bold">
+                  🗑️ حذف
+                </button>
+              </div>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-5 gap-3 text-xs bg-white p-3 rounded-lg border">
+              <div><div class="text-slate-500">صافي الإيراد</div><div class="font-extrabold text-sm">${formatEGP(j.netRevenue)}</div></div>
+              <div><div class="text-slate-500">تكلفة الخامة</div><div class="font-bold text-sm">${formatEGP(j.actualMaterialCost)}</div></div>
+              <div><div class="text-slate-500">تكلفة الهالك</div><div class="font-bold text-sm text-amber-700">${formatEGP(p.wasteAdded)}</div></div>
+              <div><div class="text-slate-500">إجمالي التكلفة</div><div class="font-extrabold text-sm text-red-700">${formatEGP(p.totalDirectCost)}</div></div>
+              <div><div class="text-slate-500">مجمل الربح</div><div class="font-extrabold text-sm text-emerald-700">${formatEGP(p.grossProfit)} (${p.marginPct}%)</div></div>
+            </div>
+            <label class="inline-flex items-center gap-2 text-xs text-slate-700 cursor-pointer">
+              <input type="checkbox" ${j.wasteIncludedInMaterial ? 'checked' : ''} onchange="state.jobs[${idx}].wasteIncludedInMaterial=this.checked; saveState();" />
+              <span>الهالك مشمول بالفعل داخل مسحوبات الخامة الإجمالية (منع الحساب المزدوج لتكلفة الهالك)</span>
+            </label>
+          </div>`;
+        })
+        .join('');
+    }
+
+    function openJobEdit(idx) {
+      const j = state.jobs[idx];
+      if (!j) return;
+      document.getElementById('editJobIdx').value = idx;
+      document.getElementById('editJobDesc').value = j.description;
+      const custSel = document.getElementById('editJobCustomer');
+      custSel.innerHTML = state.customers.map((c) => `<option value="${c.id}">${c.name}</option>`).join('');
+      custSel.value = j.customerId;
+      document.getElementById('editJobStatus').value = j.status;
+      document.getElementById('editJobRevenue').value = j.netRevenue;
+      document.getElementById('editJobMatCost').value = j.actualMaterialCost;
+      document.getElementById('editJobWasteCost').value = j.actualWasteCost;
+      document.getElementById('editJobLaborCost').value = j.directLaborAndInstallCost;
+      document.getElementById('jobEditTitle').textContent = `✏️ تعديل أمر الشغل: ${j.id}`;
+      document.getElementById('jobEditCard').classList.remove('hidden');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function closeJobEdit() {
+      document.getElementById('jobEditCard').classList.add('hidden');
+    }
+
+    function saveJobEdit() {
+      const idx = Number(document.getElementById('editJobIdx').value);
+      const j = state.jobs[idx];
+      if (!j) return;
+      j.description = document.getElementById('editJobDesc').value.trim() || j.description;
+      j.customerId = document.getElementById('editJobCustomer').value;
+      j.status = document.getElementById('editJobStatus').value;
+      j.netRevenue = round2(document.getElementById('editJobRevenue').value || 0);
+      j.actualMaterialCost = round2(document.getElementById('editJobMatCost').value || 0);
+      j.actualWasteCost = round2(document.getElementById('editJobWasteCost').value || 0);
+      j.directLaborAndInstallCost = round2(document.getElementById('editJobLaborCost').value || 0);
+      closeJobEdit();
+      saveState();
+    }
+
+    function deleteJobOrder(idx) {
+      if (!confirm(`هل أنت متأكد من حذف أمر الشغل ${state.jobs[idx].id}؟`)) return;
+      state.jobs.splice(idx, 1);
+      saveState();
+    }
+
+    // ============================================================================
+    // 7. INVOICES (NO TIER IN CUSTOMER INVOICE + NO DUPLICATE COMPANY NAME)
+    // ============================================================================
+    function renderInvoices() {
+      const container = document.getElementById('invoicesContainer');
+      container.innerHTML = state.invoices
+        .map((inv, idx) => {
+          const subtotal = Number(inv.subtotal ?? inv.grandTotal);
+          const overPrice = Number(inv.overPrice ?? 0);
+          const discount = Number(inv.discountAmount ?? 0);
+          const rem = round2(Number(inv.grandTotal) - Number(inv.paidAmount));
+          const cust = state.customers.find((c) => c.id === inv.customerId) || { name: 'عميل عام' };
+
+          return `
+          <div class="p-4 rounded-xl border ${inv.status === 'CANCELLED' ? 'bg-red-50/40 opacity-60' : 'bg-slate-50'} flex flex-wrap items-center justify-between gap-4">
+            <div class="space-y-1">
+              <div class="font-extrabold text-base text-slate-900">
+                ${inv.id} — <span class="text-blue-900">${cust.name}</span>
+                <span class="text-xs px-2 py-0.5 rounded bg-blue-100 text-blue-900 mx-1">${inv.status}</span>
+              </div>
+              <div class="text-xs text-slate-600 flex flex-wrap gap-3">
+                <span>الإجمالي قبل الخصم: <strong>${formatEGP(subtotal + overPrice)}</strong></span>
+                <span class="text-rose-700">قيمة الخصم: <strong>${formatEGP(discount)}</strong></span>
+                <span class="text-blue-950">الصافي بعد الخصم: <strong>${formatEGP(inv.grandTotal)}</strong></span>
+                <span class="text-emerald-700">المدفوع: <strong>${formatEGP(inv.paidAmount)}</strong></span>
+                <span class="text-red-700">المتبقي: <strong>${formatEGP(rem)}</strong></span>
+              </div>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+              ${
+                inv.status !== 'CANCELLED' && rem > 0
+                  ? `<input type="number" id="payInput-${idx}" value="${rem}" class="border rounded px-2.5 py-1 text-xs w-24" />
+                     <button onclick="recordPartialPayment(${idx})" class="bg-emerald-700 text-white px-3 py-1.5 rounded text-xs font-bold">تحصيل دفعة</button>`
+                  : ''
+              }
+              <button onclick="openInvoiceEdit(${idx})" class="bg-amber-100 hover:bg-amber-200 text-amber-900 px-3 py-1.5 rounded text-xs font-bold">
+                ✏️ تعديل الفاتورة والخصم
+              </button>
+              <button onclick="selectedInvoiceId='${inv.id}'; renderPrintableInvoice(); window.print();" class="bg-blue-900 text-white px-3 py-1.5 rounded text-xs font-bold">
+                🖨️ طباعة / PDF A4
+              </button>
+              <button onclick="cancelInvoice(${idx})" class="bg-red-100 text-red-800 px-3 py-1.5 rounded text-xs font-bold">
+                إلغاء
+              </button>
+            </div>
+          </div>`;
+        })
+        .join('');
+
+      renderPrintableInvoice();
+    }
+
+    function openInvoiceEdit(idx) {
+      const inv = state.invoices[idx];
+      if (!inv) return;
+      document.getElementById('editInvIdx').value = idx;
+      const custSel = document.getElementById('editInvCustomer');
+      custSel.innerHTML = state.customers.map((c) => `<option value="${c.id}">${c.name}</option>`).join('');
+      custSel.value = inv.customerId;
+      document.getElementById('editInvDate').value = inv.date || new Date().toISOString().slice(0, 10);
+      document.getElementById('editInvDesc').value = stripTierFromText(inv.items?.[0]?.desc || 'خدمات طباعة ودعاية');
+      document.getElementById('editInvSubtotal').value = inv.subtotal ?? inv.grandTotal;
+      document.getElementById('editInvOverPrice').value = inv.overPrice ?? 0;
+      document.getElementById('editInvDiscount').value = inv.discountAmount ?? 0;
+      document.getElementById('editInvPaid').value = inv.paidAmount ?? 0;
+      document.getElementById('editInvNotes').value = inv.notes || '';
+      document.getElementById('invEditTitle').textContent = `✏️ تعديل الفاتورة: ${inv.id}`;
+      document.getElementById('invoiceEditCard').classList.remove('hidden');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function closeInvoiceEdit() {
+      document.getElementById('invoiceEditCard').classList.add('hidden');
+    }
+
+    function saveInvoiceEdit() {
+      const idx = Number(document.getElementById('editInvIdx').value);
+      const inv = state.invoices[idx];
+      if (!inv) return;
+
+      const subtotal = round2(document.getElementById('editInvSubtotal').value || 0);
+      const overPrice = round2(document.getElementById('editInvOverPrice').value || 0);
+      const discount = round2(document.getElementById('editInvDiscount').value || 0);
+      const preDiscount = round2(subtotal + overPrice);
+
+      if (discount < 0 || discount > preDiscount) {
+        alert('قيمة الخصم لا يمكن أن تكون سالبة أو أكبر من إجمالي الفاتورة قبل الخصم!');
+        return;
+      }
+
+      const grandTotal = round2(preDiscount - discount);
+      const paid = round2(document.getElementById('editInvPaid').value || 0);
+      const mainDesc = stripTierFromText(document.getElementById('editInvDesc').value.trim() || 'خدمات طباعة ودعاية');
+
+      inv.customerId = document.getElementById('editInvCustomer').value;
+      inv.date = document.getElementById('editInvDate').value;
+      inv.subtotal = subtotal;
+      inv.overPrice = overPrice;
+      inv.discountAmount = discount;
+      inv.grandTotal = grandTotal;
+      inv.paidAmount = paid;
+      inv.notes = document.getElementById('editInvNotes').value.trim();
+      inv.items = [{ desc: mainDesc, qty: 1, price: subtotal, total: subtotal }];
+      inv.status = round2(grandTotal - paid) <= 0 ? 'PAID' : paid > 0 ? 'PARTIALLY_PAID' : 'ISSUED';
+
+      selectedInvoiceId = inv.id;
+      closeInvoiceEdit();
+      saveState();
+    }
+
+    function recordPartialPayment(idx) {
+      const inv = state.invoices[idx];
+      const val = Number(document.getElementById('payInput-' + idx).value || 0);
+      const rem = round2(Number(inv.grandTotal) - Number(inv.paidAmount));
+      if (val <= 0 || val > rem) {
+        alert('مبلغ الدفعة يجب أن يكون أكبر من صفر ولا يتجاوز الرصيد المتبقي.');
+        return;
+      }
+      inv.paidAmount = round2(Number(inv.paidAmount) + val);
+      inv.status = round2(Number(inv.grandTotal) - Number(inv.paidAmount)) === 0 ? 'PAID' : 'PARTIALLY_PAID';
+      selectedInvoiceId = inv.id;
+      saveState();
+    }
+
+    function cancelInvoice(idx) {
+      if (state.role !== 'ADMIN') {
+        alert('⛔ مرفوض أمنياً (RBAC): صلاحية المبيعات لا تملك إذن حذف أو إلغاء الفواتير المالية!');
+        return;
+      }
+      state.invoices[idx].status = 'CANCELLED';
+      saveState();
+    }
+
+    function renderPrintableInvoice() {
+      const inv = state.invoices.find((i) => i.id === selectedInvoiceId) || state.invoices[0];
+      if (!inv) return;
+      const cust = state.customers.find((c) => c.id === inv.customerId) || { name: 'عميل نقدي', phone: '-', address: '' };
+      const subtotal = round2(inv.subtotal ?? inv.grandTotal);
+      const overPrice = round2(inv.overPrice ?? 0);
+      const discount = round2(inv.discountAmount ?? 0);
+      const preDiscount = round2(subtotal + overPrice);
+      const rem = round2(Number(inv.grandTotal) - Number(inv.paidAmount));
+      const companyTitle = state.lang === 'ar' ? state.companyNameAr : state.companyNameEn;
+
+      // Notice: Company name is printed ONCE on the right. Left side shows ONLY the uploaded image logo (if present).
+      // Also: stripTierFromText() ensures no pricing tier ever appears on the customer's invoice.
+      document.getElementById('printableInvoiceArea').innerHTML = `
+        <div class="flex items-center justify-between border-b-2 border-blue-950 pb-4 mb-6">
+          <div>
+            <h2 class="text-xl font-extrabold text-blue-950">${companyTitle}</h2>
+            <p class="text-xs text-slate-600 font-semibold">${state.companyTagline || ''}</p>
+            <p class="text-xs text-slate-500">${state.companyAddress || ''} | هاتف: ${state.companyPhone || ''}</p>
+            ${state.companyTax ? `<p class="text-xs text-slate-500">${state.companyTax}</p>` : ''}
+          </div>
+          ${
+            state.logoDataUrl
+              ? `<div class="landscape-logo-box"><img src="${state.logoDataUrl}" alt="Logo" /></div>`
+              : ''
+          }
+        </div>
+
+        <div class="flex justify-between text-sm mb-4 bg-slate-50 p-3 rounded-lg border">
+          <div>
+            <div><strong>فاتورة مبيعات رقم:</strong> ${inv.id}</div>
+            <div><strong>العميل:</strong> ${cust.name}</div>
+            <div><strong>الهاتف:</strong> ${cust.phone || '-'} ${cust.address ? `| ${cust.address}` : ''}</div>
+          </div>
+          <div class="text-end">
+            <div><strong>التاريخ:</strong> ${inv.date}</div>
+            <div><strong>حالة السداد:</strong> ${inv.status}</div>
+            ${inv.jobId ? `<div><strong>أمر الشغل:</strong> ${inv.jobId}</div>` : ''}
+          </div>
+        </div>
+
+        <table class="w-full text-sm border-collapse mb-6">
+          <thead>
+            <tr class="bg-blue-950 text-white">
+              <th class="p-2.5 text-start">#</th>
+              <th class="p-2.5 text-start">البيان والمواصفات</th>
+              <th class="p-2.5 text-center">الكمية</th>
+              <th class="p-2.5 text-center">السعر</th>
+              <th class="p-2.5 text-end">الإجمالي</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${inv.items
+              .map(
+                (item, i) => `
+              <tr class="border-b">
+                <td class="p-2.5">${i + 1}</td>
+                <td class="p-2.5 font-semibold">${stripTierFromText(item.desc)}</td>
+                <td class="p-2.5 text-center">${item.qty}</td>
+                <td class="p-2.5 text-center">${formatEGP(item.price)}</td>
+                <td class="p-2.5 text-end font-bold">${formatEGP(item.total)}</td>
+              </tr>`
+              )
+              .join('')}
+          </tbody>
+        </table>
+
+        <div class="flex flex-wrap justify-between items-start gap-6 border-t pt-4">
+          <div class="text-xs text-slate-600 max-w-md space-y-1">
+            ${inv.notes ? `<div class="p-2 bg-amber-50 border border-amber-200 rounded text-amber-950 font-semibold"><strong>ملاحظات:</strong> ${inv.notes}</div>` : ''}
+            <div><strong>الشروط والأحكام:</strong> ${state.companyFooter || ''}</div>
+          </div>
+
+          <div class="w-80 space-y-1.5 text-sm bg-slate-50 p-4 rounded-xl border">
+            <div class="flex justify-between"><span>إجمالي البنود:</span> <strong>${formatEGP(subtotal)}</strong></div>
+            ${overPrice > 0 ? `<div class="flex justify-between"><span>رسوم إضافية:</span> <strong>${formatEGP(overPrice)}</strong></div>` : ''}
+            <div class="flex justify-between border-t pt-1"><span>الإجمالي قبل الخصم:</span> <strong>${formatEGP(preDiscount)}</strong></div>
+            <div class="flex justify-between text-rose-700 font-bold">
+              <span>قيمة الخصم النقدي:</span>
+              <span>- ${formatEGP(discount)}</span>
+            </div>
+            <div class="flex justify-between text-base font-extrabold text-blue-950 border-t border-slate-300 pt-1.5">
+              <span>الصافي النهائي المطلوب:</span>
+              <span>${formatEGP(inv.grandTotal)}</span>
+            </div>
+            <div class="flex justify-between text-emerald-700"><span>المبلغ المدفوع:</span> <strong>${formatEGP(inv.paidAmount)}</strong></div>
+            <div class="flex justify-between text-red-700 text-base font-extrabold border-t pt-1">
+              <span>الرصيد المتبقي:</span>
+              <span>${formatEGP(rem)}</span>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // ============================================================================
+    // 8. CUSTOMERS CRUD (WITH PRICING TIER SELECTION)
+    // ============================================================================
+    function renderCustomers() {
+      initTierInputsFromState();
+      const custSelect = document.getElementById('qCustomer');
+      const prevCust = custSelect.value;
+      custSelect.innerHTML = state.customers
+        .map((c) => `<option value="${c.id}">${c.name} — [${getTierNameByNumber(c.tier || 1)}]</option>`)
+        .join('');
+      if (prevCust && state.customers.some((c) => c.id === prevCust)) custSelect.value = prevCust;
+
+      document.getElementById('customersTableBody').innerHTML = state.customers
+        .map(
+          (c, idx) => `
+        <tr class="hover:bg-slate-50">
+          <td class="p-3 font-bold text-slate-600">${c.id}</td>
+          <td class="p-3 font-extrabold text-slate-900">${c.name}</td>
+          <td class="p-3 text-center">
+            <span class="px-2.5 py-1 rounded-full text-xs font-extrabold bg-emerald-100 text-emerald-900 border border-emerald-300">
+              ${c.tier || 1}️⃣ ${getTierNameByNumber(c.tier || 1)}
+            </span>
+          </td>
+          <td class="p-3 text-slate-700">${c.phone || '-'}</td>
+          <td class="p-3 text-slate-500">${c.address || '-'}</td>
+          <td class="p-3 text-center">
+            <div class="flex justify-center gap-1.5">
+              <button onclick="editCustomer(${idx})" class="px-2.5 py-1 rounded bg-amber-100 hover:bg-amber-200 text-amber-900 text-xs font-bold">✏️ تعديل</button>
+              <button onclick="deleteCustomer(${idx})" class="px-2.5 py-1 rounded bg-red-100 hover:bg-red-200 text-red-800 text-xs font-bold">🗑️ حذف</button>
+            </div>
+          </td>
+        </tr>`
+        )
+        .join('');
+    }
+
+    function saveCustomer() {
+      const editIdx = Number(document.getElementById('editCustIdx').value);
+      const name = document.getElementById('newCustName').value.trim();
+      const phone = document.getElementById('newCustPhone').value.trim();
+      const tier = Number(document.getElementById('newCustTier').value || 1);
+      const address = document.getElementById('newCustAddress').value.trim();
+      if (!name) return alert('يرجى إدخال اسم العميل.');
+
+      if (editIdx >= 0 && editIdx < state.customers.length) {
+        state.customers[editIdx].name = name;
+        state.customers[editIdx].phone = phone || '-';
+        state.customers[editIdx].tier = tier;
+        state.customers[editIdx].address = address || '';
+      } else {
+        state.customers.push({
+          id: 'CUST-0' + (state.customers.length + 1),
+          name,
+          phone: phone || '-',
+          tier,
+          address: address || ''
+        });
+      }
+      resetCustomerForm();
+      saveState();
+      onCalculatorCustomerChange();
+    }
+
+    function editCustomer(idx) {
+      const c = state.customers[idx];
+      if (!c) return;
+      document.getElementById('editCustIdx').value = idx;
+      document.getElementById('newCustName').value = c.name;
+      document.getElementById('newCustPhone').value = c.phone || '';
+      document.getElementById('newCustTier').value = String(c.tier || 1);
+      document.getElementById('newCustAddress').value = c.address || '';
+      document.getElementById('custFormTitle').textContent = `✏️ تعديل بيانات العميل: ${c.name}`;
+      document.getElementById('saveCustBtn').textContent = '💾 حفظ تعديلات العميل';
+      document.getElementById('saveCustBtn').className = 'w-full bg-amber-600 hover:bg-amber-500 text-white px-5 py-2 rounded-lg text-sm font-bold';
+      document.getElementById('cancelCustEditBtn').classList.remove('hidden');
+    }
+
+    function deleteCustomer(idx) {
+      if (state.customers.length <= 1) return alert('يجب بقاء عميل واحد على الأقل.');
+      const c = state.customers[idx];
+      if (!confirm(`هل أنت متأكد من حذف العميل "${c.name}"؟`)) return;
+      state.customers.splice(idx, 1);
+      resetCustomerForm();
+      saveState();
+    }
+
+    function resetCustomerForm() {
+      document.getElementById('editCustIdx').value = '-1';
+      document.getElementById('newCustName').value = '';
+      document.getElementById('newCustPhone').value = '';
+      document.getElementById('newCustTier').value = '1';
+      document.getElementById('newCustAddress').value = '';
+      document.getElementById('custFormTitle').textContent = '👥 إدارة العملاء وتحديد الفئة السعرية لكل عميل';
+      document.getElementById('saveCustBtn').textContent = '➕ حفظ وإضافة العميل';
+      document.getElementById('saveCustBtn').className = 'w-full bg-blue-900 hover:bg-blue-800 text-white px-5 py-2 rounded-lg text-sm font-bold';
+      document.getElementById('cancelCustEditBtn').classList.add('hidden');
+    }
+
+    // ============================================================================
+    // 9. DASHBOARD & NAVIGATION
+    // ============================================================================
+    function renderDashboard() {
+      const activeInvoices = state.invoices.filter((i) => i.status !== 'CANCELLED');
+      const totalInvoiced = activeInvoices.reduce((s, i) => s + Number(i.grandTotal), 0);
+      const totalCollected = activeInvoices.reduce((s, i) => s + Number(i.paidAmount), 0);
+      const totalReceivables = activeInvoices.reduce((s, i) => s + (Number(i.grandTotal) - Number(i.paidAmount)), 0);
+
+      let totalGrossProfit = 0;
+      let totalWasteCost = 0;
+      state.jobs.forEach((j) => {
+        const p = calcJobProfit(j);
+        totalGrossProfit += p.grossProfit;
+        totalWasteCost += Number(j.actualWasteCost);
+      });
+      const netProfit = totalGrossProfit - Number(state.operatingExpenses);
+
+      const cards = [
+        { label: 'إجمالي المبيعات المفوترة (بعد الخصم)', val: formatEGP(totalInvoiced), sub: `${activeInvoices.length} فاتورة نشطة`, color: 'text-blue-900' },
+        { label: 'النقدية المحصلة الفعلية', val: formatEGP(totalCollected), sub: `المتبقي: ${formatEGP(totalReceivables)}`, color: 'text-emerald-700' },
+        { label: 'مجمل ربح أوامر الشغل', val: formatEGP(totalGrossProfit), sub: `تكلفة الهالك: ${formatEGP(totalWasteCost)}`, color: 'text-indigo-900' },
+        { label: 'صافي الربح بعد المصروفات', val: formatEGP(netProfit), sub: `عدد العملاء: ${state.customers.length} | الخامات: ${state.materials.length}`, color: 'text-slate-900' }
+      ];
+
+      document.getElementById('dashboardCards').innerHTML = cards
+        .map(
+          (c) => `
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+          <div class="text-xs font-bold text-slate-500 mb-1">${c.label}</div>
+          <div class="text-xl font-extrabold ${c.color}">${c.val}</div>
+          <div class="text-xs text-slate-400 mt-1">${c.sub}</div>
+        </div>`
+        )
+        .join('');
+
+      document.getElementById('dashJobsList').innerHTML = state.jobs
+        .map((j) => {
+          const p = calcJobProfit(j);
+          return `<div class="p-3 rounded-lg bg-slate-50 border flex items-center justify-between">
+            <div>
+              <div class="font-bold text-slate-800">${j.id} — ${j.description}</div>
+              <div class="text-xs text-slate-500">الحالة: ${j.status} | هامش الربح: ${p.marginPct}%</div>
+            </div>
+            <span class="font-bold text-emerald-700">${formatEGP(p.grossProfit)}</span>
+          </div>`;
+        })
+        .join('');
+
+      const t = state.tierNames || DEFAULT_STATE.tierNames;
+      document.getElementById('dashStockList').innerHTML = state.materials
+        .map((m) => `
+          <div class="p-3 rounded-lg bg-slate-50 border flex items-center justify-between">
+            <div>
+              <div class="font-bold">${m.nameAr}</div>
+              <div class="text-xs text-slate-500">
+                عرض الرول: ${Number(m.rollWidth).toFixed(2)}م |
+                ${t.tier1}: ${m.priceCat1} | ${t.tier2}: ${m.priceCat2} | ${t.tier3}: ${m.priceCat3} | ${t.tier4}: ${m.priceCat4} ج.م
+              </div>
+            </div>
+            <span class="px-2.5 py-1 rounded text-xs font-bold bg-blue-100 text-blue-900">${m.stockSqM} m²</span>
+          </div>`
+        )
+        .join('');
+    }
+
+    function toggleLanguage() {
+      state.lang = state.lang === 'ar' ? 'en' : 'ar';
+      document.documentElement.lang = state.lang;
+      document.documentElement.dir = state.lang === 'ar' ? 'rtl' : 'ltr';
+      document.getElementById('langBtn').textContent = state.lang === 'ar' ? 'English (LTR)' : 'العربية (RTL)';
+      saveState();
+    }
+
+    function switchView(viewName) {
+      ['calculator', 'materials', 'jobs', 'invoices', 'customers', 'dashboard', 'settings'].forEach((v) => {
+        document.getElementById('view-' + v).classList.toggle('hidden', v !== viewName);
+      });
+      document.querySelectorAll('.nav-btn').forEach((btn) => {
+        const active = btn.getAttribute('data-view') === viewName;
+        btn.className = `nav-btn w-full text-start px-4 py-2.5 rounded-lg font-semibold ${
+          active ? 'bg-blue-700 text-white' : 'text-slate-300 hover:bg-slate-800'
+        }`;
+      });
+    }
+
+    function changeRole(newRole) {
+      state.role = newRole;
+      saveState();
+    }
+
+    function renderAll() {
+      renderLogo();
+      renderCompanySettingsForm();
+      renderMaterialsTab();
+      renderCustomers();
+      renderDashboard();
+      runLivePrintCalc();
+      renderJobs();
+      renderInvoices();
+    }
+
+    // Initialize on load and auto-connect to your Firebase DB
+    renderAll();
+    onCalculatorCustomerChange();
+    onCalculatorMaterialOrTierChange();
+    if (firebaseDbUrl) {
+      pullFromFirebaseManual(true);
+    }
+  </script>
+</body>
+</html>
